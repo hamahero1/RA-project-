@@ -4,7 +4,9 @@ This project solves the 8-puzzle problem with Uniform Cost Search, A*, and Greed
 
 ## Files
 
-- `SearchAlgorithms2 - Template .py` - the complete solver, heuristics, command-line mode, tests, benchmark, and UI.
+- `UI.py` - the browser UI and optional Tkinter UI.
+- `search_algorithms.py` - the complete solver, heuristics, command-line mode, tests, and benchmark.
+- `SearchAlgorithms2 - Template .py` - compatibility launcher that re-exports the algorithm names and opens the UI when run.
 - `RA26 project.docx` - the original project description.
 - `.gitignore` - ignores Python cache files, virtual environments, and local editor files.
 
@@ -20,7 +22,7 @@ No external packages are required. The project uses only the Python standard lib
 ## Run the UI
 
 ```powershell
-python "SearchAlgorithms2 - Template .py"
+python UI.py
 ```
 
 The UI opens with the sample puzzle:
@@ -46,36 +48,42 @@ http://127.0.0.1:8000
 
 Open that URL in a browser if it does not open automatically.
 
+The old command still works too:
+
+```powershell
+python "SearchAlgorithms2 - Template .py"
+```
+
 ## Command-Line Usage
 
 Run the built-in demo:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --cli
+python search_algorithms.py --cli
 ```
 
 Run a benchmark:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --benchmark
+python search_algorithms.py --benchmark
 ```
 
 Run quick correctness checks:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --self-test
+python search_algorithms.py --self-test
 ```
 
 Run the optional Tkinter UI:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --tk
+python UI.py --tk
 ```
 
 Run one algorithm:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan --start "1 2 3 4 0 6 7 5 8"
+python search_algorithms.py --algorithm "A*" --heuristic manhattan --start "1 2 3 4 0 6 7 5 8"
 ```
 
 ## UI Flow
@@ -183,9 +191,9 @@ linear_conflict >= manhattan >= misplaced
 - `SearchAlgorithms` exposes the required `UCS`, `Astar`, and `Greedy` methods.
 - `successors` generates all valid next states by swapping the blank with an adjacent tile.
 - `misplaced`, `manhattan`, and `linear_conflict` calculate heuristic values.
-- `PuzzleWebHandler` serves the browser UI and connects UI actions to the solver.
-- `EightPuzzleApp` keeps an optional Tkinter UI for Python installations with working Tk support.
-- `run_demo`, `run_benchmark`, and `run_self_test` provide command-line workflows.
+- `PuzzleWebHandler` in `UI.py` serves the browser UI and connects UI actions to the solver.
+- `EightPuzzleApp` in `UI.py` keeps an optional Tkinter UI for Python installations with working Tk support.
+- `run_demo`, `run_benchmark`, and `run_self_test` in `search_algorithms.py` provide command-line workflows.
 
 ## GitHub Setup
 
