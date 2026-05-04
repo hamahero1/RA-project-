@@ -14,6 +14,7 @@ No external packages are required. The project uses only the Python standard lib
 
 - Python 3.10 or newer is recommended.
 - Tkinter is needed for the desktop UI. It is included with most Windows Python installations.
+- If the `python` command opens Microsoft Store or fails on Windows, add Python to `PATH` or run the full path to `python.exe`.
 
 ## Run the UI
 
