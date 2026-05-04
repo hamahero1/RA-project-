@@ -95,7 +95,7 @@ python search_algorithms.py --algorithm "A*" --heuristic manhattan --start "1 2 
 5. Use `Step` to move one state at a time, or `Animate` to play the full solution.
 6. Press `Benchmark` to compare UCS, A*, and Greedy across the available heuristics.
 
-When `UCS` is selected, the heuristic menu is disabled and shows `Not used`, because UCS uses only path cost. Tiles next to the blank are highlighted. Clicking a highlighted tile moves it into the blank position. The live heuristic values update after every manual move.
+When `UCS` is selected, the heuristic menu is disabled and shows `Not used`, because UCS uses only path cost. The benchmark table shows `Algorithm`, `Cost`, `Experience`, and `Settings`. `Reset` returns to the last loaded or shuffled puzzle, not always the built-in sample. `Shuffle` and `Reset` clear old solution and benchmark results. Tiles next to the blank are highlighted. Clicking a highlighted tile moves it into the blank position.
 
 ## State Representation
 

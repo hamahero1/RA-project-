@@ -69,7 +69,7 @@ WEB_APP_HTML = r"""<!doctype html>
 
     .app {
       width: min(1180px, calc(100vw - 32px));
-      margin: 20px auto;
+      margin: 12px auto;
     }
 
     .header {
@@ -79,7 +79,7 @@ WEB_APP_HTML = r"""<!doctype html>
       gap: 16px;
       background: #111827;
       color: #ffffff;
-      padding: 20px 22px;
+      padding: 16px 20px;
       border-radius: 8px;
     }
 
@@ -110,14 +110,14 @@ WEB_APP_HTML = r"""<!doctype html>
       display: grid;
       grid-template-columns: minmax(360px, 0.95fr) minmax(460px, 1.15fr);
       gap: 20px;
-      margin-top: 20px;
+      margin-top: 14px;
     }
 
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 20px;
+      padding: 16px;
     }
 
     .panel-title {
@@ -133,7 +133,7 @@ WEB_APP_HTML = r"""<!doctype html>
       padding: 12px;
       border-radius: 8px;
       width: min(100%, 398px);
-      margin: 0 auto 18px;
+      margin: 0 auto 12px;
     }
 
     .board {
@@ -180,7 +180,7 @@ WEB_APP_HTML = r"""<!doctype html>
       grid-template-columns: 1fr auto auto auto;
       gap: 10px;
       align-items: end;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
 
     label {
@@ -273,18 +273,18 @@ WEB_APP_HTML = r"""<!doctype html>
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
 
     .moves {
-      min-height: 82px;
+      min-height: 64px;
       border-radius: 8px;
       background: #f8fafc;
       border: 1px solid var(--line);
@@ -298,7 +298,7 @@ WEB_APP_HTML = r"""<!doctype html>
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 18px;
+      margin-top: 12px;
       overflow: hidden;
       border-radius: 8px;
       font-size: 14px;
@@ -358,7 +358,6 @@ WEB_APP_HTML = r"""<!doctype html>
 
     <section class="layout">
       <section class="panel">
-        <h2 class="panel-title">Puzzle board</h2>
         <div class="board-shell">
           <div id="board" class="board"></div>
         </div>
@@ -381,7 +380,6 @@ WEB_APP_HTML = r"""<!doctype html>
       </section>
 
       <section class="panel">
-        <h2 class="panel-title">Solver controls</h2>
         <div class="controls">
           <div>
             <label for="algorithm">Algorithm</label>
@@ -423,11 +421,9 @@ WEB_APP_HTML = r"""<!doctype html>
           <thead>
             <tr>
               <th>Algorithm</th>
-              <th>Heuristic</th>
               <th>Cost</th>
-              <th>Expanded</th>
-              <th>Generated</th>
-              <th>Runtime</th>
+              <th>Experience</th>
+              <th>Settings</th>
             </tr>
           </thead>
           <tbody id="benchmark-body"></tbody>
@@ -440,6 +436,7 @@ WEB_APP_HTML = r"""<!doctype html>
     const goal = [1, 2, 3, 4, 5, 6, 7, 8, 0];
     const defaultStart = [1, 2, 3, 4, 0, 6, 7, 5, 8];
     let state = [...defaultStart];
+    let resetState = [...defaultStart];
     let solutionStates = [];
     let solutionActions = [];
     let solutionIndex = 0;
@@ -569,6 +566,7 @@ WEB_APP_HTML = r"""<!doctype html>
       document.getElementById("stat-generated").textContent = "-";
       document.getElementById("stat-runtime").textContent = "-";
       movesEl.textContent = "Already solved";
+      benchmarkBody.innerHTML = "";
     }
 
     function renderBoard() {
@@ -611,11 +609,23 @@ WEB_APP_HTML = r"""<!doctype html>
         const next = parseState(stateInput.value);
         if (!isSolvable(next)) throw new Error("This puzzle cannot reach the goal state.");
         state = next;
+        resetState = [...next];
         clearSolution();
         renderBoard();
         setStatus("State loaded");
       } catch (error) {
         alert(error.message);
+      }
+    }
+
+    function useInputStateAsStart() {
+      const next = parseState(stateInput.value);
+      if (!isSolvable(next)) throw new Error("This puzzle cannot reach the goal state.");
+      if (!sameState(next, state)) {
+        state = next;
+        resetState = [...next];
+        clearSolution();
+        renderBoard();
       }
     }
 
@@ -644,16 +654,17 @@ WEB_APP_HTML = r"""<!doctype html>
         current = options[Math.floor(Math.random() * options.length)];
       }
       state = current;
+      resetState = [...current];
       clearSolution();
       renderBoard();
       setStatus("Shuffled");
     }
 
     function resetPuzzle() {
-      state = [...defaultStart];
+      state = [...resetState];
       clearSolution();
       renderBoard();
-      setStatus("Reset");
+      setStatus("Reset to input");
     }
 
     function updateAlgorithmUI() {
@@ -685,6 +696,7 @@ WEB_APP_HTML = r"""<!doctype html>
       const algorithm = algorithmSelect.value;
       const heuristic = algorithm === "UCS" ? "zero" : heuristicSelect.value;
       try {
+        useInputStateAsStart();
         const data = await apiPost("/api/solve", { start: state, goal, algorithm, heuristic });
         solutionActions = data.path;
         solutionStates = data.fullPath;
@@ -742,11 +754,12 @@ WEB_APP_HTML = r"""<!doctype html>
     async function benchmarkPuzzle() {
       setStatus("Benchmarking");
       try {
+        useInputStateAsStart();
         const data = await apiPost("/api/benchmark", { start: state, goal });
         benchmarkBody.innerHTML = "";
         data.results.forEach((row) => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${row.algorithm}</td><td>${row.heuristic}</td><td>${row.cost}</td><td>${row.expanded}</td><td>${row.generated}</td><td>${row.runtime_ms}</td>`;
+          tr.innerHTML = `<td>${row.algorithm}</td><td>${row.cost}</td><td>${row.expanded}</td><td>${row.heuristic}</td>`;
           benchmarkBody.appendChild(tr);
         });
         setStatus("Benchmark done");
@@ -880,6 +893,7 @@ class EightPuzzleApp:
 
         self.root = root
         self.state = DEFAULT_START
+        self.reset_state = DEFAULT_START
         self.goal = GOAL
         self.solution_states: list[list[int]] = []
         self.solution_actions: list[str] = []
@@ -1047,11 +1061,11 @@ class EightPuzzleApp:
         self.moves_text.grid(row=3, column=0, sticky="ew")
         self.moves_text.configure(state=tk.DISABLED)
 
-        columns = ("algorithm", "heuristic", "cost", "expanded", "generated", "runtime")
+        columns = ("algorithm", "cost", "experience", "settings")
         self.benchmark_table = ttk.Treeview(right, columns=columns, show="headings", height=8)
         for column in columns:
-            self.benchmark_table.heading(column, text=column)
-            width = 120 if column == "heuristic" else 86
+            self.benchmark_table.heading(column, text=column.title())
+            width = 130 if column == "settings" else 92
             self.benchmark_table.column(column, anchor=tk.CENTER, width=width)
         self.benchmark_table.grid(row=4, column=0, sticky="nsew", pady=(18, 0))
 
@@ -1134,6 +1148,7 @@ class EightPuzzleApp:
             messagebox.showerror("Invalid puzzle", str(exc))
             return
         self.state = candidate
+        self.reset_state = candidate
         self._clear_solution()
         self._render_state()
         self.status_var.set("State loaded")
@@ -1145,21 +1160,39 @@ class EightPuzzleApp:
             options = [next_state for _, next_state in successors(state) if next_state != last_state]
             last_state, state = state, random.choice(options)
         self.state = state
+        self.reset_state = state
         self._clear_solution()
         self._sync_entry()
         self._render_state()
         self.status_var.set("Shuffled solvable state")
 
     def _reset(self):
-        self.state = DEFAULT_START
+        self.state = self.reset_state
         self._clear_solution()
         self._sync_entry()
         self._render_state()
-        self.status_var.set("Reset to sample puzzle")
+        self.status_var.set("Reset to input puzzle")
 
     def _solve(self):
         self.status_var.set("Solving...")
         self.root.update_idletasks()
+
+        try:
+            candidate = validate_state(self.state_entry.get(), "state input")
+            if not is_solvable(candidate, self.goal):
+                messagebox.showerror("Invalid puzzle", "This state cannot reach the goal state.")
+                self.status_var.set("Invalid puzzle")
+                return
+        except ValueError as exc:
+            messagebox.showerror("Invalid puzzle", str(exc))
+            self.status_var.set("Invalid puzzle")
+            return
+
+        if candidate != self.state:
+            self.state = candidate
+            self.reset_state = candidate
+            self._clear_solution()
+            self._render_state()
 
         solver = SearchAlgorithms(self.state, self.goal)
         algorithm = self.algorithm_combo.get()
@@ -1221,6 +1254,23 @@ class EightPuzzleApp:
         for row in self.benchmark_table.get_children():
             self.benchmark_table.delete(row)
 
+        try:
+            candidate = validate_state(self.state_entry.get(), "state input")
+            if not is_solvable(candidate, self.goal):
+                messagebox.showerror("Invalid puzzle", "This state cannot reach the goal state.")
+                self.status_var.set("Invalid puzzle")
+                return
+        except ValueError as exc:
+            messagebox.showerror("Invalid puzzle", str(exc))
+            self.status_var.set("Invalid puzzle")
+            return
+
+        if candidate != self.state:
+            self.state = candidate
+            self.reset_state = candidate
+            self._clear_solution()
+            self._render_state()
+
         jobs = [
             ("UCS", NOT_USED_LABEL, "zero"),
             ("A*", "Misplaced", "misplaced"),
@@ -1239,11 +1289,9 @@ class EightPuzzleApp:
                 tk.END,
                 values=(
                     algorithm,
-                    heuristic,
                     stats.get("cost", "-"),
                     stats.get("expanded", "-"),
-                    stats.get("generated", "-"),
-                    stats.get("runtime_ms", "-"),
+                    heuristic,
                 ),
             )
         self.status_var.set("Benchmark complete")
@@ -1264,6 +1312,9 @@ class EightPuzzleApp:
         self.solution_index = 0
         for variable in self.stat_vars.values():
             variable.set("-")
+        if hasattr(self, "benchmark_table"):
+            for row in self.benchmark_table.get_children():
+                self.benchmark_table.delete(row)
         if hasattr(self, "moves_text"):
             self._show_moves([])
 
