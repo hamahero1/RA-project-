@@ -1,6 +1,6 @@
 # RA26 8-Puzzle Solver
 
-This project solves the 8-puzzle problem with Uniform Cost Search, A*, and Greedy Best-First Search. It also includes a Tkinter UI for moving tiles, solving a puzzle, stepping through the solution, animating the solution, and benchmarking the algorithms.
+This project solves the 8-puzzle problem with Uniform Cost Search, A*, and Greedy Best-First Search. It includes a browser UI for moving tiles, solving a puzzle, stepping through the solution, animating the solution, and benchmarking the algorithms.
 
 ## Files
 
@@ -13,7 +13,8 @@ This project solves the 8-puzzle problem with Uniform Cost Search, A*, and Greed
 No external packages are required. The project uses only the Python standard library.
 
 - Python 3.10 or newer is recommended.
-- Tkinter is needed for the desktop UI. It is included with most Windows Python installations.
+- The default UI runs in the browser from a local Python server, so no UI package installation is needed.
+- Tkinter is optional and only needed if you run the older desktop UI with `--tk`.
 - If the `python` command opens Microsoft Store or fails on Windows, add Python to `PATH` or run the full path to `python.exe`.
 
 ## Run the UI
@@ -29,6 +30,14 @@ The UI opens with the sample puzzle:
 4 0 6
 7 5 8
 ```
+
+The terminal prints a local URL such as:
+
+```text
+http://127.0.0.1:8000
+```
+
+Open that URL in a browser if it does not open automatically.
 
 ## Command-Line Usage
 
@@ -50,6 +59,12 @@ Run quick correctness checks:
 python "SearchAlgorithms2 - Template .py" --self-test
 ```
 
+Run the optional Tkinter UI:
+
+```powershell
+python "SearchAlgorithms2 - Template .py" --tk
+```
+
 Run one algorithm:
 
 ```powershell
@@ -60,12 +75,12 @@ python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan
 
 1. Enter a puzzle state in the input box or press `Shuffle`.
 2. Choose an algorithm: `UCS`, `A*`, or `Greedy`.
-3. Choose a heuristic for A* or Greedy: `misplaced`, `manhattan`, or `linear_conflict`.
+3. Choose a heuristic for A* or Greedy: `Misplaced Tiles`, `Manhattan Distance`, or `Linear Conflict`.
 4. Press `Solve`.
 5. Use `Step` to move one state at a time, or `Animate` to play the full solution.
 6. Press `Benchmark` to compare UCS, A*, and Greedy across the available heuristics.
 
-Tiles next to the blank are highlighted. Clicking a highlighted tile moves it into the blank position. The live heuristic values update after every manual move.
+When `UCS` is selected, the heuristic menu is disabled and shows `Not used`, because UCS uses only path cost. Tiles next to the blank are highlighted. Clicking a highlighted tile moves it into the blank position. The live heuristic values update after every manual move.
 
 ## State Representation
 
@@ -161,7 +176,8 @@ linear_conflict >= manhattan >= misplaced
 - `SearchAlgorithms` exposes the required `UCS`, `Astar`, and `Greedy` methods.
 - `successors` generates all valid next states by swapping the blank with an adjacent tile.
 - `misplaced`, `manhattan`, and `linear_conflict` calculate heuristic values.
-- `EightPuzzleApp` builds the UI and connects button actions to the solver.
+- `PuzzleWebHandler` serves the browser UI and connects UI actions to the solver.
+- `EightPuzzleApp` keeps an optional Tkinter UI for Python installations with working Tk support.
 - `run_demo`, `run_benchmark`, and `run_self_test` provide command-line workflows.
 
 ## GitHub Setup
