@@ -66,7 +66,11 @@ def validate_state(values: Sequence[int] | str, label: str = "state") -> State:
     if isinstance(values, str):
         cleaned = values.replace(",", " ").replace(";", " ")
         try:
-            parsed = tuple(int(part) for part in cleaned.split())
+            parts = cleaned.split()
+            if len(parts) == 1 and len(parts[0]) == TILE_COUNT and parts[0].isdigit():
+                parsed = tuple(int(part) for part in parts[0])
+            else:
+                parsed = tuple(int(part) for part in parts)
         except ValueError as exc:
             raise ValueError(f"{label} must contain only numbers from 0 to 8.") from exc
     else:
@@ -814,7 +818,10 @@ WEB_APP_HTML = r"""<!doctype html>
     }
 
     function parseState(text) {
-      const values = text.replaceAll(",", " ").split(/\s+/).filter(Boolean).map(Number);
+      const parts = text.trim().replaceAll(",", " ").replaceAll(";", " ").split(/\s+/).filter(Boolean);
+      const values = parts.length === 1 && /^[0-9]{9}$/.test(parts[0])
+        ? parts[0].split("").map(Number)
+        : parts.map(Number);
       if (values.length !== 9 || values.some((value) => !Number.isInteger(value))) {
         throw new Error("State must contain exactly 9 numbers.");
       }
@@ -1665,6 +1672,8 @@ def run_benchmark(start: State = DEFAULT_START, goal: State = GOAL):
 
 def run_self_test():
     sample = DEFAULT_START
+    assert validate_state("123406758") == sample
+    assert validate_state("1 2 3 4 0 6 7 5 8") == sample
     assert is_solvable(sample, GOAL)
     values = heuristic_values(sample, GOAL)
     assert values["linear_conflict"] >= values["manhattan"] >= values["misplaced"]

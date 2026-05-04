@@ -31,6 +31,13 @@ The UI opens with the sample puzzle:
 7 5 8
 ```
 
+You can type the state with spaces, commas, or as one compact 9-digit value. These are the same state:
+
+```text
+1 2 3 4 0 6 7 5 8
+123406758
+```
+
 The terminal prints a local URL such as:
 
 ```text
