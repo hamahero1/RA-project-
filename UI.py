@@ -565,8 +565,29 @@ WEB_APP_HTML = r"""<!doctype html>
       document.getElementById("stat-expanded").textContent = "-";
       document.getElementById("stat-generated").textContent = "-";
       document.getElementById("stat-runtime").textContent = "-";
-      movesEl.textContent = "Already solved";
+      movesEl.textContent = sameState(state, goal) ? "Already solved" : "No solution yet";
       benchmarkBody.innerHTML = "";
+    }
+
+    function renderMoveProgress() {
+      if (!solutionActions.length) {
+        movesEl.textContent = sameState(state, goal) ? "Already solved" : "No solution yet";
+        return;
+      }
+
+      const total = solutionActions.length;
+      const completed = solutionActions
+        .slice(0, solutionIndex)
+        .map((move, index) => `${index + 1}. ${move}`);
+      const nextMove = solutionIndex < total ? solutionActions[solutionIndex] : null;
+      const lines = [];
+
+      if (completed.length) {
+        lines.push(`Done: ${completed.join(" -> ")}`);
+      }
+      lines.push(nextMove ? `Next move: ${nextMove}` : "Goal reached");
+      lines.push(`Progress: ${Math.min(solutionIndex, total)}/${total}`);
+      movesEl.textContent = lines.join("\n");
     }
 
     function renderBoard() {
@@ -705,47 +726,66 @@ WEB_APP_HTML = r"""<!doctype html>
         document.getElementById("stat-expanded").textContent = data.stats.expanded;
         document.getElementById("stat-generated").textContent = data.stats.generated;
         document.getElementById("stat-runtime").textContent = data.stats.runtime_ms;
-        movesEl.textContent = data.path.length ? data.path.join(" -> ") : "Already solved";
-        setStatus(data.totalCost < 0 ? "No solution" : "Solved");
+        renderMoveProgress();
+        if (data.totalCost < 0) {
+          movesEl.textContent = "No solution";
+          setStatus("No solution");
+          return false;
+        }
+        setStatus(data.path.length ? `Ready: ${data.path[0]}` : "Already solved");
+        return true;
       } catch (error) {
         setStatus("Error");
         alert(error.message);
+        return false;
       }
     }
 
-    function stepSolution() {
+    async function stepSolution() {
       if (!solutionStates.length) {
-        solvePuzzle().then(() => stepSolution());
-        return;
+        const solved = await solvePuzzle();
+        if (!solved || solutionStates.length <= 1) {
+          renderMoveProgress();
+          return;
+        }
       }
       if (solutionIndex < solutionStates.length - 1) {
+        const move = solutionActions[solutionIndex];
         solutionIndex += 1;
         state = [...solutionStates[solutionIndex]];
         renderBoard();
-        setStatus(`Step ${solutionIndex}/${solutionStates.length - 1}`);
+        renderMoveProgress();
+        setStatus(`Step ${solutionIndex}: ${move}`);
       } else {
         setStatus("Goal reached");
+        renderMoveProgress();
       }
     }
 
-    function animateSolution() {
+    async function animateSolution() {
       if (animating) return;
       if (!solutionStates.length) {
-        solvePuzzle().then(() => animateSolution());
-        return;
+        const solved = await solvePuzzle();
+        if (!solved || solutionStates.length <= 1) {
+          renderMoveProgress();
+          return;
+        }
       }
       animating = true;
       solutionIndex = 0;
       const tick = () => {
-        if (solutionIndex >= solutionStates.length) {
+        if (solutionIndex >= solutionStates.length - 1) {
           animating = false;
+          renderMoveProgress();
           setStatus("Animation complete");
           return;
         }
+        const move = solutionActions[solutionIndex];
+        solutionIndex += 1;
         state = [...solutionStates[solutionIndex]];
         renderBoard();
-        setStatus(`Animating ${solutionIndex}/${solutionStates.length - 1}`);
-        solutionIndex += 1;
+        renderMoveProgress();
+        setStatus(`Animating ${solutionIndex}: ${move}`);
         setTimeout(tick, 420);
       };
       tick();
