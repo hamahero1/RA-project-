@@ -113,7 +113,7 @@ Uniform Cost Search uses:
 f(n) = g(n)
 ```
 
-Because every move costs `1`, UCS finds the shortest solution but may expand many states.
+Because every move costs `1`, UCS finds the shortest solution but may expand many states. UCS does not use Misplaced Tiles, Manhattan Distance, or Linear Conflict. In benchmark results, its heuristic is shown as `not used`.
 
 ### A*
 

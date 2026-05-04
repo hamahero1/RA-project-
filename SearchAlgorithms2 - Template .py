@@ -645,7 +645,7 @@ class EightPuzzleApp:
             self.benchmark_table.delete(row)
 
         jobs = [
-            ("UCS", "zero"),
+            ("UCS", "not used"),
             ("A*", "misplaced"),
             ("A*", "manhattan"),
             ("A*", "linear_conflict"),
@@ -655,7 +655,8 @@ class EightPuzzleApp:
         ]
         for algorithm, heuristic in jobs:
             solver = SearchAlgorithms(self.state, self.goal)
-            run_selected_algorithm(solver, algorithm, heuristic)
+            search_heuristic = "zero" if algorithm == "UCS" else heuristic
+            run_selected_algorithm(solver, algorithm, search_heuristic)
             stats = solver.last_stats
             self.benchmark_table.insert(
                 "",
@@ -730,7 +731,7 @@ def run_demo(start: State = DEFAULT_START, goal: State = GOAL):
 
 def run_benchmark(start: State = DEFAULT_START, goal: State = GOAL):
     jobs = [
-        ("UCS", "zero"),
+        ("UCS", "not used"),
         ("A*", "misplaced"),
         ("A*", "manhattan"),
         ("A*", "linear_conflict"),
@@ -742,7 +743,8 @@ def run_benchmark(start: State = DEFAULT_START, goal: State = GOAL):
     print("-" * 70)
     for algorithm, heuristic in jobs:
         solver = SearchAlgorithms(start, goal)
-        _, _, cost = run_selected_algorithm(solver, algorithm, heuristic)
+        search_heuristic = "zero" if algorithm == "UCS" else heuristic
+        _, _, cost = run_selected_algorithm(solver, algorithm, search_heuristic)
         stats = solver.last_stats
         print(
             f"{algorithm:<10} {heuristic:<16} {cost:>5} "
