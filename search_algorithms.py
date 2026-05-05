@@ -5,6 +5,7 @@ import heapq
 import random
 import sys
 import time
+from collections import deque
 from collections.abc import Sequence
 
 BOARD_SIZE = 3
@@ -335,6 +336,82 @@ class SearchAlgorithms:
 
         return self._finish_failure("greedy", heuristic_name, started_at, expanded, generated, frontier_max)
 
+    def BFS(self):
+        started_at = time.perf_counter()
+        if not is_solvable(self.start, self.end):
+            return self._finish_unsolvable("bfs", "not_used", started_at)
+
+        start_node = Node(self.start, gOfN=0, hOfN=0, heuristicFn="not_used")
+        frontier = deque([start_node])
+        discovered_states = {self.start}
+        expanded = 0
+        generated = 1
+        frontier_max = 1
+
+        while frontier:
+            current = frontier.popleft()
+            if current.state == self.end:
+                return self._finish_success(current, "bfs", "not_used", started_at, expanded, generated, frontier_max)
+
+            expanded += 1
+            for action, next_state in successors(current.state):
+                if next_state in discovered_states:
+                    continue
+
+                discovered_states.add(next_state)
+                generated += 1
+                child = Node(
+                    next_state,
+                    parent=current,
+                    action=action,
+                    edgeCost=1,
+                    gOfN=current.gOfN + 1,
+                    hOfN=0,
+                    heuristicFn="not_used",
+                )
+                frontier.append(child)
+            frontier_max = max(frontier_max, len(frontier))
+
+        return self._finish_failure("bfs", "not_used", started_at, expanded, generated, frontier_max)
+
+    def DFS(self):
+        started_at = time.perf_counter()
+        if not is_solvable(self.start, self.end):
+            return self._finish_unsolvable("dfs", "not_used", started_at)
+
+        start_node = Node(self.start, gOfN=0, hOfN=0, heuristicFn="not_used")
+        frontier = [start_node]
+        discovered_states = {self.start}
+        expanded = 0
+        generated = 1
+        frontier_max = 1
+
+        while frontier:
+            current = frontier.pop()
+            if current.state == self.end:
+                return self._finish_success(current, "dfs", "not_used", started_at, expanded, generated, frontier_max)
+
+            expanded += 1
+            for action, next_state in reversed(successors(current.state)):
+                if next_state in discovered_states:
+                    continue
+
+                discovered_states.add(next_state)
+                generated += 1
+                child = Node(
+                    next_state,
+                    parent=current,
+                    action=action,
+                    edgeCost=1,
+                    gOfN=current.gOfN + 1,
+                    hOfN=0,
+                    heuristicFn="not_used",
+                )
+                frontier.append(child)
+            frontier_max = max(frontier_max, len(frontier))
+
+        return self._finish_failure("dfs", "not_used", started_at, expanded, generated, frontier_max)
+
     def _heuristic(self, state: State, heuristic_name: str) -> int:
         key = normalize_heuristic_name(heuristic_name)
         if key == "zero":
@@ -473,6 +550,10 @@ def run_selected_algorithm(
         return solver.Astar(heuristic)
     if normalized == "greedy":
         return solver.Greedy(heuristic)
+    if normalized == "bfs":
+        return solver.BFS()
+    if normalized == "dfs":
+        return solver.DFS()
     raise ValueError(f"Unknown algorithm: {algorithm}")
 
 
@@ -483,7 +564,13 @@ def run_demo(start: State = DEFAULT_START, goal: State = GOAL):
     print(format_state(goal))
     print()
 
-    for algorithm, heuristic in [("UCS", "zero"), ("A*", "manhattan"), ("Greedy", "manhattan")]:
+    for algorithm, heuristic in [
+        ("UCS", "zero"),
+        ("A*", "manhattan"),
+        ("Greedy", "manhattan"),
+        ("BFS", "zero"),
+        ("DFS", "zero"),
+    ]:
         solver = SearchAlgorithms(start, goal)
         path, full_path, cost = run_selected_algorithm(solver, algorithm, heuristic)
         print(f"{algorithm} ({heuristic})")
@@ -539,6 +626,14 @@ def run_self_test():
     fail = SearchAlgorithms(unsolvable, GOAL)
     _, _, fail_cost = fail.Astar("manhattan")
     assert fail_cost == -1
+
+    bfs = SearchAlgorithms(sample, GOAL)
+    _, _, bfs_cost = bfs.BFS()
+    assert bfs_cost == cost
+
+    dfs = SearchAlgorithms(sample, GOAL)
+    _, _, dfs_cost = dfs.DFS()
+    assert dfs_cost >= cost
     print("Self-test passed.")
 
 
@@ -551,7 +646,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--self-test", action="store_true", help="Run quick correctness checks.")
     parser.add_argument("--start", default=" ".join(str(tile) for tile in DEFAULT_START), help="Start state, for example: '1 2 3 4 0 6 7 5 8' or '123406758'.")
     parser.add_argument("--goal", default=" ".join(str(tile) for tile in GOAL), help="Goal state, for example: '1 2 3 4 5 6 7 8 0' or '123456780'.")
-    parser.add_argument("--algorithm", choices=["UCS", "A*", "Greedy"], help="Run one algorithm.")
+    parser.add_argument("--algorithm", choices=["UCS", "A*", "Greedy", "BFS", "DFS"], help="Run one algorithm.")
     parser.add_argument("--heuristic", default="manhattan", choices=["misplaced", "manhattan", "linear_conflict"], help="Heuristic for A* or Greedy.")
     return parser
 

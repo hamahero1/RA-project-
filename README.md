@@ -1,6 +1,6 @@
 # RA26 8-Puzzle Solver
 
-This project solves the 8-puzzle problem with Uniform Cost Search, A*, and Greedy Best-First Search. It includes a browser UI for moving tiles, solving a puzzle, stepping through the solution, animating the solution, and benchmarking the algorithms.
+This project solves the 8-puzzle problem with Uniform Cost Search, A*, Greedy Best-First Search, and the bonus BFS/DFS algorithms. It includes a browser UI for moving tiles, solving a puzzle, stepping through the solution, animating the solution, and benchmarking the algorithms.
 
 ## Files
 
@@ -182,6 +182,7 @@ linear_conflict >= manhattan >= misplaced
 
 - `Node` stores one search-tree state, its parent, the action that produced it, `g(n)`, and `h(n)`.
 - `SearchAlgorithms` exposes the required `UCS`, `Astar`, and `Greedy` methods.
+- Bonus methods `BFS` and `DFS` are also implemented.
 - `successors` generates all valid next states by swapping the blank with an adjacent tile.
 - `misplaced`, `manhattan`, and `linear_conflict` calculate heuristic values.
 - `PuzzleWebHandler` in `UI.py` serves the browser UI and connects UI actions to the solver.

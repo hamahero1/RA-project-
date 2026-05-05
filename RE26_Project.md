@@ -21,6 +21,8 @@ The project includes:
 - Uniform Cost Search.
 - A* Search.
 - Greedy Best-First Search.
+- Bonus Breadth-First Search.
+- Bonus Depth-First Search.
 - Three heuristic functions.
 - Required `fullPath` output.
 - Bonus `path` output.
@@ -364,6 +366,8 @@ python search_algorithms.py --algorithm "A*" --heuristic manhattan --start "1234
 |---|---|
 | Actual path `path` | Implemented |
 | All three heuristics | Implemented |
+| BFS | Implemented |
+| DFS | Implemented |
 | Browser UI | Implemented |
 | Benchmark table | Implemented |
 | Step-by-step solution playback | Implemented |
