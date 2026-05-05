@@ -30,7 +30,22 @@ NOT_USED_LABEL = "Not used"
 State = tuple[int, ...]
 
 
+# ---------------------------------------------------------------------------
+# Assignment-compatible search classes
+# ---------------------------------------------------------------------------
+
 class Node:
+    """One node in the 8-puzzle search tree.
+
+    The attribute names match the provided project template:
+    - state: current board state
+    - parentstate: parent board state
+    - action: move used to reach this node
+    - edgeCost: cost of the last move
+    - gOfN: total path cost from start
+    - hOfN: heuristic value
+    """
+
     state = None
     parentstate = None
     action = None
@@ -60,7 +75,13 @@ class Node:
         self.heuristicFn = heuristicFn
 
 
+# ---------------------------------------------------------------------------
+# Puzzle validation, moves, and heuristics
+# ---------------------------------------------------------------------------
+
 def validate_state(values: Sequence[int] | str, label: str = "state") -> State:
+    """Convert user input to a valid 8-puzzle state."""
+
     if isinstance(values, str):
         cleaned = values.replace(",", " ").replace(";", " ")
         try:
@@ -82,6 +103,8 @@ def validate_state(values: Sequence[int] | str, label: str = "state") -> State:
 
 
 def format_state(state: Sequence[int]) -> str:
+    """Return a readable 3x3 board string."""
+
     rows = []
     for row in range(BOARD_SIZE):
         start = row * BOARD_SIZE
@@ -90,6 +113,8 @@ def format_state(state: Sequence[int]) -> str:
 
 
 def count_inversions(state: Sequence[int]) -> int:
+    """Count inversions while ignoring the blank tile."""
+
     tiles = [tile for tile in state if tile != 0]
     return sum(
         1
@@ -100,6 +125,8 @@ def count_inversions(state: Sequence[int]) -> int:
 
 
 def is_solvable(start: Sequence[int], goal: Sequence[int] = GOAL) -> bool:
+    """A 3x3 puzzle is solvable when inversion parity matches the goal."""
+
     start_state = validate_state(start, "start")
     goal_state = validate_state(goal, "goal")
     return count_inversions(start_state) % 2 == count_inversions(goal_state) % 2
@@ -113,12 +140,16 @@ def goal_positions(goal: Sequence[int]) -> dict[int, tuple[int, int]]:
 
 
 def misplaced(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
+    """h1: count tiles that are not in their goal position."""
+
     state = validate_state(state)
     goal = validate_state(goal, "goal")
     return sum(tile != 0 and tile != goal[index] for index, tile in enumerate(state))
 
 
 def manhattan(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
+    """h2: sum row and column distance from each tile to its goal."""
+
     state = validate_state(state)
     positions = goal_positions(validate_state(goal, "goal"))
     total = 0
@@ -132,6 +163,8 @@ def manhattan(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
 
 
 def linear_conflict(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
+    """h3: Manhattan distance plus row/column ordering conflicts."""
+
     state = validate_state(state)
     goal = validate_state(goal, "goal")
     positions = goal_positions(goal)
@@ -168,6 +201,8 @@ def _inversion_count(values: Sequence[int]) -> int:
 
 
 def successors(state: Sequence[int]) -> list[tuple[str, State]]:
+    """Generate all valid moves from a state as (action, next_state)."""
+
     state = tuple(state)
     blank = state.index(0)
     row, col = divmod(blank, BOARD_SIZE)
@@ -191,6 +226,12 @@ def successors(state: Sequence[int]) -> list[tuple[str, State]]:
 
 
 class SearchAlgorithms:
+    """Required project API.
+
+    The public methods keep the template names and all return:
+    path, fullPath, totalCost
+    """
+
     Path = []
     fullPath = []
     totalCost = -1
@@ -205,15 +246,23 @@ class SearchAlgorithms:
         self.last_stats: dict[str, int | float | str | bool] = {}
 
     def UCS(self):
+        """Uniform Cost Search: f(n) = g(n)."""
+
         return self._search("ucs", "zero")
 
     def Astar(self, heuristic: str | None = None):
+        """A* Search: f(n) = g(n) + h(n)."""
+
         return self._search("astar", heuristic or self.heuristic_name)
 
     def Greedy(self, heuristic: str | None = None):
+        """Greedy Best-First Search: f(n) = h(n)."""
+
         return self._search("greedy", heuristic or self.heuristic_name)
 
     def _search(self, algorithm: str, heuristic_name: str):
+        """Shared priority-queue search used by UCS, A*, and Greedy."""
+
         started_at = time.perf_counter()
         if not is_solvable(self.start, self.end):
             self.Path = []
@@ -234,17 +283,17 @@ class SearchAlgorithms:
 
         start_h = self._heuristic(self.start, heuristic_name)
         start_node = Node(self.start, gOfN=0, hOfN=start_h, heuristicFn=heuristic_name)
-        frontier: list[tuple[int, int, int, Node]] = []
+        priority_queue: list[tuple[int, int, int, Node]] = []
         counter = 0
-        heapq.heappush(frontier, (self._priority(algorithm, 0, start_h), start_h, counter, start_node))
-        best_g = {self.start: 0}
+        heapq.heappush(priority_queue, (self._priority(algorithm, 0, start_h), start_h, counter, start_node))
+        best_cost_to_state = {self.start: 0}
         expanded = 0
         generated = 1
         frontier_max = 1
 
-        while frontier:
-            _, _, _, current = heapq.heappop(frontier)
-            if current.gOfN > best_g.get(current.state, sys.maxsize):
+        while priority_queue:
+            _, _, _, current = heapq.heappop(priority_queue)
+            if current.gOfN > best_cost_to_state.get(current.state, sys.maxsize):
                 continue
 
             if current.state == self.end:
@@ -265,10 +314,10 @@ class SearchAlgorithms:
             expanded += 1
             for action, next_state in successors(current.state):
                 new_g = current.gOfN + 1
-                if new_g >= best_g.get(next_state, sys.maxsize):
+                if new_g >= best_cost_to_state.get(next_state, sys.maxsize):
                     continue
 
-                best_g[next_state] = new_g
+                best_cost_to_state[next_state] = new_g
                 next_h = self._heuristic(next_state, heuristic_name)
                 counter += 1
                 generated += 1
@@ -282,10 +331,10 @@ class SearchAlgorithms:
                     heuristicFn=heuristic_name,
                 )
                 heapq.heappush(
-                    frontier,
+                    priority_queue,
                     (self._priority(algorithm, new_g, next_h), next_h, counter, child),
                 )
-            frontier_max = max(frontier_max, len(frontier))
+            frontier_max = max(frontier_max, len(priority_queue))
 
         self.Path = []
         self.fullPath = []
@@ -388,6 +437,10 @@ def run_selected_algorithm(
     raise ValueError(f"Unknown algorithm: {algorithm}")
 
 
+# ---------------------------------------------------------------------------
+# Command-line helpers and simple tests
+# ---------------------------------------------------------------------------
+
 def run_demo(start: State = DEFAULT_START, goal: State = GOAL):
     print("Start state:")
     print(format_state(start))
@@ -454,6 +507,11 @@ def run_self_test():
     print("Self-test passed.")
 
 
+
+
+# ---------------------------------------------------------------------------
+# Browser UI and optional Tkinter UI
+# ---------------------------------------------------------------------------
 
 
 WEB_APP_HTML = r"""<!doctype html>
