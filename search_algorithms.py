@@ -192,71 +192,35 @@ class SearchAlgorithms:
         self.last_stats: dict[str, int | float | str | bool] = {}
 
     def UCS(self):
-        return self._search("ucs", "zero")
-
-    def Astar(self, heuristic: str | None = None):
-        return self._search("astar", heuristic or self.heuristic_name)
-
-    def Greedy(self, heuristic: str | None = None):
-        return self._search("greedy", heuristic or self.heuristic_name)
-
-    def _search(self, algorithm: str, heuristic_name: str):
         started_at = time.perf_counter()
         if not is_solvable(self.start, self.end):
-            self.Path = []
-            self.fullPath = [list(self.start)]
-            self.totalCost = -1
-            self.last_stats = {
-                "algorithm": algorithm,
-                "heuristic": heuristic_name,
-                "solvable": False,
-                "success": False,
-                "expanded": 0,
-                "generated": 1,
-                "frontier_max": 1,
-                "cost": -1,
-                "runtime_ms": _elapsed_ms(started_at),
-            }
-            return self.Path, self.fullPath, self.totalCost
+            return self._finish_unsolvable("ucs", "zero", started_at)
 
-        start_h = self._heuristic(self.start, heuristic_name)
-        start_node = Node(self.start, gOfN=0, hOfN=start_h, heuristicFn=heuristic_name)
         frontier: list[tuple[int, int, int, Node]] = []
+        start_node = Node(self.start, gOfN=0, hOfN=0, heuristicFn="zero")
+        heapq.heappush(frontier, (0, 0, 0, start_node))
+
+        best_cost_to_state = {self.start: 0}
         counter = 0
-        heapq.heappush(frontier, (self._priority(algorithm, 0, start_h), start_h, counter, start_node))
-        best_g = {self.start: 0}
         expanded = 0
         generated = 1
         frontier_max = 1
 
         while frontier:
             _, _, _, current = heapq.heappop(frontier)
-            if current.gOfN > best_g.get(current.state, sys.maxsize):
+            if current.gOfN > best_cost_to_state.get(current.state, sys.maxsize):
                 continue
 
             if current.state == self.end:
-                self.Path, self.fullPath, self.totalCost = self._reconstruct(current)
-                self.last_stats = {
-                    "algorithm": algorithm,
-                    "heuristic": heuristic_name,
-                    "solvable": True,
-                    "success": True,
-                    "expanded": expanded,
-                    "generated": generated,
-                    "frontier_max": frontier_max,
-                    "cost": self.totalCost,
-                    "runtime_ms": _elapsed_ms(started_at),
-                }
-                return self.Path, self.fullPath, self.totalCost
+                return self._finish_success(current, "ucs", "zero", started_at, expanded, generated, frontier_max)
 
             expanded += 1
             for action, next_state in successors(current.state):
-                new_g = current.gOfN + 1
-                if new_g >= best_g.get(next_state, sys.maxsize):
+                new_cost = current.gOfN + 1
+                if new_cost >= best_cost_to_state.get(next_state, sys.maxsize):
                     continue
 
-                best_g[next_state] = new_g
-                next_h = self._heuristic(next_state, heuristic_name)
+                best_cost_to_state[next_state] = new_cost
                 counter += 1
                 generated += 1
                 child = Node(
@@ -264,16 +228,175 @@ class SearchAlgorithms:
                     parent=current,
                     action=action,
                     edgeCost=1,
-                    gOfN=new_g,
+                    gOfN=new_cost,
+                    hOfN=0,
+                    heuristicFn="zero",
+                )
+                heapq.heappush(frontier, (new_cost, 0, counter, child))
+            frontier_max = max(frontier_max, len(frontier))
+
+        return self._finish_failure("ucs", "zero", started_at, expanded, generated, frontier_max)
+
+    def Astar(self, heuristic: str | None = None):
+        heuristic_name = heuristic or self.heuristic_name
+        started_at = time.perf_counter()
+        if not is_solvable(self.start, self.end):
+            return self._finish_unsolvable("astar", heuristic_name, started_at)
+
+        start_h = self._heuristic(self.start, heuristic_name)
+        frontier: list[tuple[int, int, int, Node]] = []
+        start_node = Node(self.start, gOfN=0, hOfN=start_h, heuristicFn=heuristic_name)
+        heapq.heappush(frontier, (start_h, start_h, 0, start_node))
+
+        best_cost_to_state = {self.start: 0}
+        counter = 0
+        expanded = 0
+        generated = 1
+        frontier_max = 1
+
+        while frontier:
+            _, _, _, current = heapq.heappop(frontier)
+            if current.gOfN > best_cost_to_state.get(current.state, sys.maxsize):
+                continue
+
+            if current.state == self.end:
+                return self._finish_success(current, "astar", heuristic_name, started_at, expanded, generated, frontier_max)
+
+            expanded += 1
+            for action, next_state in successors(current.state):
+                new_cost = current.gOfN + 1
+                if new_cost >= best_cost_to_state.get(next_state, sys.maxsize):
+                    continue
+
+                next_h = self._heuristic(next_state, heuristic_name)
+                best_cost_to_state[next_state] = new_cost
+                counter += 1
+                generated += 1
+                child = Node(
+                    next_state,
+                    parent=current,
+                    action=action,
+                    edgeCost=1,
+                    gOfN=new_cost,
                     hOfN=next_h,
                     heuristicFn=heuristic_name,
                 )
-                heapq.heappush(
-                    frontier,
-                    (self._priority(algorithm, new_g, next_h), next_h, counter, child),
-                )
+                heapq.heappush(frontier, (new_cost + next_h, next_h, counter, child))
             frontier_max = max(frontier_max, len(frontier))
 
+        return self._finish_failure("astar", heuristic_name, started_at, expanded, generated, frontier_max)
+
+    def Greedy(self, heuristic: str | None = None):
+        heuristic_name = heuristic or self.heuristic_name
+        started_at = time.perf_counter()
+        if not is_solvable(self.start, self.end):
+            return self._finish_unsolvable("greedy", heuristic_name, started_at)
+
+        start_h = self._heuristic(self.start, heuristic_name)
+        frontier: list[tuple[int, int, int, Node]] = []
+        start_node = Node(self.start, gOfN=0, hOfN=start_h, heuristicFn=heuristic_name)
+        heapq.heappush(frontier, (start_h, 0, 0, start_node))
+
+        best_cost_to_state = {self.start: 0}
+        counter = 0
+        expanded = 0
+        generated = 1
+        frontier_max = 1
+
+        while frontier:
+            _, _, _, current = heapq.heappop(frontier)
+            if current.gOfN > best_cost_to_state.get(current.state, sys.maxsize):
+                continue
+
+            if current.state == self.end:
+                return self._finish_success(current, "greedy", heuristic_name, started_at, expanded, generated, frontier_max)
+
+            expanded += 1
+            for action, next_state in successors(current.state):
+                new_cost = current.gOfN + 1
+                if new_cost >= best_cost_to_state.get(next_state, sys.maxsize):
+                    continue
+
+                next_h = self._heuristic(next_state, heuristic_name)
+                best_cost_to_state[next_state] = new_cost
+                counter += 1
+                generated += 1
+                child = Node(
+                    next_state,
+                    parent=current,
+                    action=action,
+                    edgeCost=1,
+                    gOfN=new_cost,
+                    hOfN=next_h,
+                    heuristicFn=heuristic_name,
+                )
+                heapq.heappush(frontier, (next_h, new_cost, counter, child))
+            frontier_max = max(frontier_max, len(frontier))
+
+        return self._finish_failure("greedy", heuristic_name, started_at, expanded, generated, frontier_max)
+
+    def _heuristic(self, state: State, heuristic_name: str) -> int:
+        key = normalize_heuristic_name(heuristic_name)
+        if key == "zero":
+            return 0
+        if key == "misplaced":
+            return misplaced(state, self.end)
+        if key == "manhattan":
+            return manhattan(state, self.end)
+        if key == "linear_conflict":
+            return linear_conflict(state, self.end)
+        raise ValueError(f"Unknown heuristic: {heuristic_name}")
+
+    def _finish_unsolvable(self, algorithm: str, heuristic_name: str, started_at: float):
+        self.Path = []
+        self.fullPath = [list(self.start)]
+        self.totalCost = -1
+        self.last_stats = {
+            "algorithm": algorithm,
+            "heuristic": heuristic_name,
+            "solvable": False,
+            "success": False,
+            "expanded": 0,
+            "generated": 1,
+            "frontier_max": 1,
+            "cost": -1,
+            "runtime_ms": _elapsed_ms(started_at),
+        }
+        return self.Path, self.fullPath, self.totalCost
+
+    def _finish_success(
+        self,
+        goal_node: Node,
+        algorithm: str,
+        heuristic_name: str,
+        started_at: float,
+        expanded: int,
+        generated: int,
+        frontier_max: int,
+    ):
+        self.Path, self.fullPath, self.totalCost = self._reconstruct(goal_node)
+        self.last_stats = {
+            "algorithm": algorithm,
+            "heuristic": heuristic_name,
+            "solvable": True,
+            "success": True,
+            "expanded": expanded,
+            "generated": generated,
+            "frontier_max": frontier_max,
+            "cost": self.totalCost,
+            "runtime_ms": _elapsed_ms(started_at),
+        }
+        return self.Path, self.fullPath, self.totalCost
+
+    def _finish_failure(
+        self,
+        algorithm: str,
+        heuristic_name: str,
+        started_at: float,
+        expanded: int,
+        generated: int,
+        frontier_max: int,
+    ):
         self.Path = []
         self.fullPath = []
         self.totalCost = -1
@@ -289,28 +412,6 @@ class SearchAlgorithms:
             "runtime_ms": _elapsed_ms(started_at),
         }
         return self.Path, self.fullPath, self.totalCost
-
-    def _heuristic(self, state: State, heuristic_name: str) -> int:
-        key = normalize_heuristic_name(heuristic_name)
-        if key == "zero":
-            return 0
-        if key == "misplaced":
-            return misplaced(state, self.end)
-        if key == "manhattan":
-            return manhattan(state, self.end)
-        if key == "linear_conflict":
-            return linear_conflict(state, self.end)
-        raise ValueError(f"Unknown heuristic: {heuristic_name}")
-
-    @staticmethod
-    def _priority(algorithm: str, g_value: int, h_value: int) -> int:
-        if algorithm == "ucs":
-            return g_value
-        if algorithm == "astar":
-            return g_value + h_value
-        if algorithm == "greedy":
-            return h_value
-        raise ValueError(f"Unknown algorithm: {algorithm}")
 
     @staticmethod
     def _reconstruct(node: Node) -> tuple[list[str], list[list[int]], int]:
