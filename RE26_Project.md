@@ -28,15 +28,16 @@ The project includes:
 - Benchmark comparison table.
 - Solvability validation.
 
-## Main Requirement
+## Project Files
 
-The project must be implemented in one Python file:
+The project is split into two Python files:
 
 ```text
-SearchAlgorithms2 - Template .py
+search_algorithms.py
+UI.py
 ```
 
-The file contains the required `SearchAlgorithms` class and the three required methods:
+`search_algorithms.py` contains the required `SearchAlgorithms` class and the three required methods:
 
 ```python
 UCS()
@@ -247,7 +248,7 @@ The project includes a browser UI inside the same Python file.
 Run:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py"
+python UI.py
 ```
 
 The program opens a local browser UI at:
@@ -330,7 +331,8 @@ Total cost:
 4. Select the Python file:
 
 ```text
-SearchAlgorithms2 - Template .py
+UI.py
+search_algorithms.py
 ```
 
 5. Set it as the startup file.
@@ -341,19 +343,19 @@ SearchAlgorithms2 - Template .py
 Run the self-test:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --self-test
+python search_algorithms.py --self-test
 ```
 
 Run benchmark:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --benchmark
+python search_algorithms.py --benchmark
 ```
 
 Run one algorithm:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan --start "123406758"
+python search_algorithms.py --algorithm "A*" --heuristic manhattan --start "123406758"
 ```
 
 ## Bonus Checklist
@@ -370,7 +372,8 @@ python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan
 
 | Requirement | Status |
 |---|---|
-| One `.py` file | Done |
+| UI in its own file | Done |
+| Search algorithms in their own file | Done |
 | UCS implemented | Done |
 | A* implemented | Done |
 | Greedy implemented | Done |
