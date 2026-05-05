@@ -387,6 +387,8 @@ WEB_APP_HTML = r"""<!doctype html>
               <option value="UCS">UCS</option>
               <option value="A*" selected>A*</option>
               <option value="Greedy">Greedy</option>
+              <option value="BFS">BFS</option>
+              <option value="DFS">DFS</option>
             </select>
           </div>
           <div>
@@ -689,7 +691,7 @@ WEB_APP_HTML = r"""<!doctype html>
     }
 
     function updateAlgorithmUI() {
-      if (algorithmSelect.value === "UCS") {
+      if (algorithmSelect.value === "UCS" || algorithmSelect.value === "BFS" || algorithmSelect.value === "DFS") {
         if (heuristicSelect.value !== "zero") lastHeuristic = heuristicSelect.value;
         notUsedOption.hidden = false;
         heuristicSelect.value = "zero";
@@ -715,7 +717,7 @@ WEB_APP_HTML = r"""<!doctype html>
     async function solvePuzzle() {
       setStatus("Solving");
       const algorithm = algorithmSelect.value;
-      const heuristic = algorithm === "UCS" ? "zero" : heuristicSelect.value;
+      const heuristic = (algorithm === "UCS" || algorithm === "BFS" || algorithm === "DFS") ? "zero" : heuristicSelect.value;
       try {
         useInputStateAsStart();
         const data = await apiPost("/api/solve", { start: state, goal, algorithm, heuristic });
@@ -907,6 +909,8 @@ class PuzzleWebHandler(BaseHTTPRequestHandler):
             ("Greedy", "Misplaced", "misplaced"),
             ("Greedy", "Manhattan", "manhattan"),
             ("Greedy", "Linear Conflict", "linear_conflict"),
+            ("BFS", NOT_USED_LABEL, "zero"),
+            ("DFS", NOT_USED_LABEL, "zero"),
         ]
         results = []
         for algorithm, label, heuristic in jobs:
@@ -1056,7 +1060,7 @@ class EightPuzzleApp:
 
         ttk.Label(controls, text="Solver controls", style="PanelTitle.TLabel").grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 12))
         ttk.Label(controls, text="Algorithm", style="Panel.TLabel").grid(row=1, column=0, sticky="w")
-        self.algorithm_combo = ttk.Combobox(controls, state="readonly", values=["UCS", "A*", "Greedy"])
+        self.algorithm_combo = ttk.Combobox(controls, state="readonly", values=["UCS", "A*", "Greedy", "BFS", "DFS"])
         self.algorithm_combo.current(1)
         self.algorithm_combo.grid(row=2, column=0, sticky="ew", padx=(0, 8), pady=(4, 10))
         self.algorithm_combo.bind("<<ComboboxSelected>>", self._on_algorithm_changed)
@@ -1115,7 +1119,7 @@ class EightPuzzleApp:
         if current in UI_HEURISTIC_LABELS:
             self.last_heuristic_label = current
 
-        if algorithm == "UCS":
+        if algorithm in {"UCS", "BFS", "DFS"}:
             self.heuristic_combo.configure(values=[NOT_USED_LABEL], state="disabled")
             self.heuristic_combo.set(NOT_USED_LABEL)
             return
@@ -1236,7 +1240,7 @@ class EightPuzzleApp:
 
         solver = SearchAlgorithms(self.state, self.goal)
         algorithm = self.algorithm_combo.get()
-        heuristic = "zero" if algorithm == "UCS" else normalize_heuristic_name(self.heuristic_combo.get())
+        heuristic = "zero" if algorithm in {"UCS", "BFS", "DFS"} else normalize_heuristic_name(self.heuristic_combo.get())
         path, full_path, cost = run_selected_algorithm(solver, algorithm, heuristic)
 
         self.solution_actions = path
@@ -1319,6 +1323,8 @@ class EightPuzzleApp:
             ("Greedy", "Misplaced", "misplaced"),
             ("Greedy", "Manhattan", "manhattan"),
             ("Greedy", "Linear Conflict", "linear_conflict"),
+            ("BFS", NOT_USED_LABEL, "zero"),
+            ("DFS", NOT_USED_LABEL, "zero"),
         ]
         for algorithm, heuristic, search_heuristic in jobs:
             solver = SearchAlgorithms(self.state, self.goal)

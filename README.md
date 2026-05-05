@@ -82,7 +82,7 @@ python search_algorithms.py --algorithm "A*" --heuristic manhattan --start "1 2 
 ## UI Flow
 
 1. Enter a puzzle state in the input box or press `Shuffle`.
-2. Choose an algorithm: `UCS`, `A*`, or `Greedy`.
+2. Choose an algorithm: `UCS`, `A*`, `Greedy`, `BFS`, or `DFS`.
 3. Choose a heuristic for A* or Greedy: `Misplaced Tiles`, `Manhattan Distance`, or `Linear Conflict`.
 4. Press `Solve`.
 5. Use `Step` to move one state at a time, or `Animate` to play the full solution.

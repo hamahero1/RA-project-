@@ -265,7 +265,7 @@ http://127.0.0.1:8000
 - Load the puzzle.
 - Shuffle a solvable puzzle.
 - Reset to the last loaded or shuffled puzzle.
-- Select UCS, A*, or Greedy.
+- Select UCS, A*, Greedy, BFS, or DFS.
 - Select a heuristic for A* and Greedy.
 - Disable heuristic selection automatically for UCS.
 - Solve the puzzle.
