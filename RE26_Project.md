@@ -63,6 +63,16 @@ The project can be explained in five solver-only parts:
 4. Search algorithms: the `SearchAlgorithms` class includes UCS, A*, Greedy, BFS, and DFS.
 5. Output and testing: each algorithm returns `path`, `fullPath`, and `totalCost`; the file also includes self-test and benchmark commands.
 
+## Five Person Work Split
+
+| Person | Part | What they explain |
+|---|---|---|
+| Person 1 | State handling | Board format, input rules, and the blank tile `0`. |
+| Person 2 | Solvability and moves | Inversion parity and legal blank-tile movement. |
+| Person 3 | Heuristics | Misplaced Tiles, Manhattan Distance, and Linear Conflict. |
+| Person 4 | Search algorithms | UCS, A*, Greedy, BFS, and DFS inside `SearchAlgorithms`. |
+| Person 5 | Results and testing | `path`, `fullPath`, `totalCost`, self-test, and benchmark. |
+
 ## State Representation
 
 The puzzle state is represented as a flat list of 9 numbers.

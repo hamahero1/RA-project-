@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import heapq
-import random
 import sys
 import time
 from collections import deque
@@ -52,15 +51,6 @@ def validate_state(values: Sequence[int] | str, label: str = "state") -> State:
     return parsed
 
 
-def format_state(state: Sequence[int]) -> str:
-    state = validate_state(state)
-    rows = []
-    for row in range(BOARD_SIZE):
-        start = row * BOARD_SIZE
-        rows.append(" ".join(str(tile) for tile in state[start : start + BOARD_SIZE]))
-    return "\n".join(rows)
-
-
 def count_inversions(state: Sequence[int], ignore_zero: bool = True) -> int:
     tiles = [tile for tile in state if not ignore_zero or tile != 0]
     inversions = 0
@@ -77,14 +67,6 @@ def is_solvable(start: Sequence[int], goal: Sequence[int] = GOAL) -> bool:
     return count_inversions(start_state) % 2 == count_inversions(goal_state) % 2
 
 
-def goal_positions(goal: Sequence[int]) -> dict[int, tuple[int, int]]:
-    goal_state = validate_state(goal, "goal")
-    positions = {}
-    for index, tile in enumerate(goal_state):
-        positions[tile] = divmod(index, BOARD_SIZE)
-    return positions
-
-
 def misplaced(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
     state = validate_state(state)
     goal = validate_state(goal, "goal")
@@ -97,7 +79,10 @@ def misplaced(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
 
 def manhattan(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
     state = validate_state(state)
-    positions = goal_positions(goal)
+    positions = {
+        tile: divmod(index, BOARD_SIZE)
+        for index, tile in enumerate(validate_state(goal, "goal"))
+    }
     total = 0
     for index, tile in enumerate(state):
         if tile == 0:
@@ -111,7 +96,7 @@ def manhattan(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
 def linear_conflict(state: Sequence[int], goal: Sequence[int] = GOAL) -> int:
     state = validate_state(state)
     goal = validate_state(goal, "goal")
-    positions = goal_positions(goal)
+    positions = {tile: divmod(index, BOARD_SIZE) for index, tile in enumerate(goal)}
     conflicts = 0
 
     for row in range(BOARD_SIZE):
@@ -159,6 +144,8 @@ def successors(state: Sequence[int]) -> list[tuple[str, State]]:
 
 
 class SearchAlgorithms:
+    """Required project class for UCS, A*, Greedy, and bonus BFS/DFS."""
+
     Path = []
     fullPath = []
     totalCost = -1
@@ -172,6 +159,7 @@ class SearchAlgorithms:
         self.heuristic_name = "manhattan"
         self.last_stats = {}
 
+    # Required algorithms
     def UCS(self):
         return self._priority_search("ucs", "zero")
 
@@ -187,6 +175,7 @@ class SearchAlgorithms:
     def DFS(self):
         return self._queue_search("dfs")
 
+    # Shared search engines
     def _priority_search(self, algorithm, heuristic_name):
         heuristic_name = normalize_heuristic_name(heuristic_name)
         started_at = time.perf_counter()
@@ -196,9 +185,11 @@ class SearchAlgorithms:
         frontier = []
         start_h = 0 if algorithm == "ucs" else self._heuristic(self.start, heuristic_name)
         start_node = self._make_node(self.start, None, None, 0, 0, start_h, heuristic_name)
+        start_priority = 0 if algorithm == "ucs" else start_h
+        start_tie = 0 if algorithm == "greedy" else start_h
         heapq.heappush(
             frontier,
-            (self._priority(algorithm, 0, start_h), self._tie(algorithm, 0, start_h), 0, start_node),
+            (start_priority, start_tie, 0, start_node),
         )
         best_cost_to_state = {self.start: 0}
         counter = 0
@@ -225,14 +216,16 @@ class SearchAlgorithms:
                 generated += 1
                 next_h = 0 if algorithm == "ucs" else self._heuristic(next_state, heuristic_name)
                 child = self._make_node(next_state, current, action, 1, new_cost, next_h, heuristic_name)
+                if algorithm == "ucs":
+                    priority = new_cost
+                elif algorithm == "astar":
+                    priority = new_cost + next_h
+                else:
+                    priority = next_h
+                tie = new_cost if algorithm == "greedy" else next_h
                 heapq.heappush(
                     frontier,
-                    (
-                        self._priority(algorithm, new_cost, next_h),
-                        self._tie(algorithm, new_cost, next_h),
-                        counter,
-                        child,
-                    ),
+                    (priority, tie, counter, child),
                 )
             frontier_max = max(frontier_max, len(frontier))
 
@@ -284,18 +277,6 @@ class SearchAlgorithms:
         node.heuristicFn = heuristic_name
         return node
 
-    def _priority(self, algorithm, g_of_n, h_of_n):
-        if algorithm == "ucs":
-            return g_of_n
-        if algorithm == "astar":
-            return g_of_n + h_of_n
-        return h_of_n
-
-    def _tie(self, algorithm, g_of_n, h_of_n):
-        if algorithm == "greedy":
-            return g_of_n
-        return h_of_n
-
     def _heuristic(self, state, heuristic_name):
         key = normalize_heuristic_name(heuristic_name)
         if key == "zero":
@@ -320,7 +301,20 @@ class SearchAlgorithms:
         solvable=True,
     ):
         if goal_node is not None:
-            self.Path, self.fullPath, self.totalCost = self._reconstruct(goal_node)
+            actions = []
+            states = []
+            current = goal_node
+            while current is not None:
+                states.append(list(current.state))
+                if current.action is not None:
+                    actions.append(current.action)
+                current = current.parent
+
+            actions.reverse()
+            states.reverse()
+            self.Path = actions
+            self.fullPath = states
+            self.totalCost = len(actions)
         else:
             self.Path = []
             self.fullPath = [] if solvable else [list(self.start)]
@@ -335,29 +329,9 @@ class SearchAlgorithms:
             "generated": generated,
             "frontier_max": frontier_max,
             "cost": self.totalCost,
-            "runtime_ms": _elapsed_ms(started_at),
+            "runtime_ms": round((time.perf_counter() - started_at) * 1000, 3),
         }
         return self.Path, self.fullPath, self.totalCost
-
-    @staticmethod
-    def _reconstruct(node):
-        actions = []
-        states = []
-        current = node
-
-        while current is not None:
-            states.append(list(current.state))
-            if current.action is not None:
-                actions.append(current.action)
-            current = current.parent
-
-        actions.reverse()
-        states.reverse()
-        return actions, states, len(actions)
-
-
-def _elapsed_ms(started_at):
-    return round((time.perf_counter() - started_at) * 1000, 3)
 
 
 def normalize_heuristic_name(name):
@@ -404,32 +378,6 @@ def run_selected_algorithm(solver, algorithm, heuristic="manhattan"):
     raise ValueError("Unknown algorithm: " + str(algorithm))
 
 
-def random_solvable_state(goal=GOAL, steps=50):
-    current = validate_state(goal, "goal")
-    previous = None
-    for _ in range(steps):
-        options = [(action, state) for action, state in successors(current) if state != previous]
-        previous = current
-        _, current = random.choice(options)
-    return current
-
-
-def run_demo(start=DEFAULT_START, goal=GOAL):
-    for algorithm, heuristic in [
-        ("UCS", "zero"),
-        ("A*", "manhattan"),
-        ("Greedy", "manhattan"),
-        ("BFS", "zero"),
-        ("DFS", "zero"),
-    ]:
-        solver = SearchAlgorithms(start, goal)
-        path, full_path, cost = run_selected_algorithm(solver, algorithm, heuristic)
-        print(algorithm + " Path: " + str(path))
-        print("Full Path is: " + str(full_path))
-        print(" + total Cost = " + str(cost))
-        print("Stats: " + str(solver.last_stats))
-
-
 def run_benchmark(start=DEFAULT_START, goal=GOAL):
     rows = []
     for algorithm, heuristic in [
@@ -471,7 +419,7 @@ def run_self_test():
     return True
 
 
-def build_parser():
+def _run_from_args():
     parser = argparse.ArgumentParser(description="Solve the 8-puzzle problem.")
     parser.add_argument("--cli", action="store_true", help="Run all algorithms on the default puzzle.")
     parser.add_argument("--benchmark", action="store_true", help="Run benchmark rows for all algorithms.")
@@ -480,11 +428,6 @@ def build_parser():
     parser.add_argument("--heuristic", default="manhattan", help="A* or Greedy heuristic.")
     parser.add_argument("--start", default=" ".join(str(tile) for tile in DEFAULT_START), help="Start puzzle.")
     parser.add_argument("--goal", default=" ".join(str(tile) for tile in GOAL), help="Goal puzzle.")
-    return parser
-
-
-def _run_from_args():
-    parser = build_parser()
     args = parser.parse_args()
     start = validate_state(args.start, "start")
     goal = validate_state(args.goal, "goal")
@@ -523,8 +466,20 @@ def _run_from_args():
         print("Stats: " + str(solver.last_stats))
         return
 
-    run_demo(start, goal)
-    
+    for algorithm, heuristic in [
+        ("UCS", "zero"),
+        ("A*", "manhattan"),
+        ("Greedy", "manhattan"),
+        ("BFS", "zero"),
+        ("DFS", "zero"),
+    ]:
+        solver = SearchAlgorithms(start, goal)
+        path, full_path, cost = run_selected_algorithm(solver, algorithm, heuristic)
+        print(algorithm + " Path: " + str(path))
+        print("Full Path is: " + str(full_path))
+        print(" + total Cost = " + str(cost))
+        print("Stats: " + str(solver.last_stats))
+
 def main():
     s3 = SearchAlgorithms([1, 2, 3, 4, 0, 6, 7, 5, 8], [1,2,3,4,5,6,7,8,0])
     path, fullPath, cost = s3.UCS()

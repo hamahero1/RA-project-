@@ -134,6 +134,16 @@ path, fullPath, totalCost
 4. Search algorithms: runs UCS, A*, Greedy, BFS, and DFS through the `SearchAlgorithms` class.
 5. Results and checks: returns `path`, `fullPath`, and `totalCost`, then supports self-test and benchmark runs.
 
+## Five Person Work Split
+
+| Person | Project part | Main responsibility |
+|---|---|---|
+| Person 1 | State handling | Validate input, represent the board, and explain the `0` blank tile. |
+| Person 2 | Solvability and movement | Explain inversion parity and how `successors` creates legal moves. |
+| Person 3 | Heuristics | Explain Misplaced Tiles, Manhattan Distance, and Linear Conflict. |
+| Person 4 | Search algorithms | Explain and test UCS, A*, Greedy, BFS, and DFS in `SearchAlgorithms`. |
+| Person 5 | Results and testing | Explain `path`, `fullPath`, `totalCost`, self-test, and benchmark output. |
+
 ## Algorithms
 
 ### UCS
@@ -192,7 +202,7 @@ linear_conflict >= manhattan >= misplaced
 - `successors`, `validate_state`, and `is_solvable` handle puzzle rules before search starts.
 - `misplaced`, `manhattan`, and `linear_conflict` calculate heuristic values.
 - `SearchAlgorithms` exposes `UCS`, `Astar`, `Greedy`, `BFS`, and `DFS`.
-- `run_demo`, `run_benchmark`, and `run_self_test` provide command-line checks.
+- Command-line options provide demo, benchmark, and self-test checks.
 
 ## GitHub Setup
 
