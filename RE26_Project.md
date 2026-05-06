@@ -67,11 +67,11 @@ The project can be explained in five solver-only parts:
 
 | Person | Part | What they explain |
 |---|---|---|
-| Person 1 | State handling | Board format, input rules, and the blank tile `0`. |
-| Person 2 | Solvability and moves | Inversion parity and legal blank-tile movement inside `SearchAlgorithms`. |
-| Person 3 | Heuristics | Misplaced Tiles, Manhattan Distance, and Linear Conflict inside `SearchAlgorithms`. |
-| Person 4 | Search algorithms | UCS, A*, Greedy, BFS, and DFS inside `SearchAlgorithms`. |
-| Person 5 | Results and testing | `path`, `fullPath`, `totalCost`, self-test, and benchmark. |
+| Person 1 | BFS | Queue, discovered states, `path`, `fullPath`, and total cost. |
+| Person 2 | DFS | Stack, visited states, `path`, `fullPath`, and why DFS is not always shortest. |
+| Person 3 | Greedy | Best heuristic choice, `h(n)`, and why Greedy is not guaranteed optimal. |
+| Person 4 | A* | `g(n) + h(n)`, heuristic functions, and optimal path behavior. |
+| Person 5 | UCS | Path cost `g(n)`, uniform step cost, and shortest solution behavior. |
 
 ## State Representation
 

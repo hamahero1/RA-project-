@@ -138,11 +138,11 @@ path, fullPath, totalCost
 
 | Person | Project part | Main responsibility |
 |---|---|---|
-| Person 1 | State handling | Validate input, represent the board, and explain the `0` blank tile. |
-| Person 2 | Solvability and movement | Explain inversion parity and how `SearchAlgorithms.successors` creates legal moves. |
-| Person 3 | Heuristics | Explain Misplaced Tiles, Manhattan Distance, and Linear Conflict. |
-| Person 4 | Search algorithms | Explain and test UCS, A*, Greedy, BFS, and DFS in `SearchAlgorithms`. |
-| Person 5 | Results and testing | Explain `path`, `fullPath`, `totalCost`, self-test, and benchmark output. |
+| Person 1 | BFS | Explain and test `BFS()`, including the queue, discovered states, full path, and total cost. |
+| Person 2 | DFS | Explain and test `DFS()`, including the stack, visited states, full path, and why DFS is not always shortest. |
+| Person 3 | Greedy | Explain and test `Greedy()`, including how it uses `h(n)` only and why it is not guaranteed optimal. |
+| Person 4 | A* | Explain and test `Astar()`, including `g(n) + h(n)` and the available heuristics. |
+| Person 5 | UCS | Explain and test `UCS()`, including path cost `g(n)` and why it gives the shortest solution when every move costs `1`. |
 
 ## Algorithms
 
