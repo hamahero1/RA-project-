@@ -27,19 +27,19 @@ if SOLVER_SPEC is None or SOLVER_SPEC.loader is None:
 search_algorithm_template = importlib.util.module_from_spec(SOLVER_SPEC)
 SOLVER_SPEC.loader.exec_module(search_algorithm_template)
 
-BOARD_SIZE = search_algorithm_template.BOARD_SIZE
-DEFAULT_START = search_algorithm_template.DEFAULT_START
-GOAL = search_algorithm_template.GOAL
-NOT_USED_LABEL = search_algorithm_template.NOT_USED_LABEL
-TILE_COUNT = search_algorithm_template.TILE_COUNT
-UI_HEURISTIC_LABELS = search_algorithm_template.UI_HEURISTIC_LABELS
 SearchAlgorithms = search_algorithm_template.SearchAlgorithms
-heuristic_values = search_algorithm_template.heuristic_values
-is_solvable = search_algorithm_template.is_solvable
-normalize_heuristic_name = search_algorithm_template.normalize_heuristic_name
-run_selected_algorithm = search_algorithm_template.run_selected_algorithm
-successors = search_algorithm_template.successors
-validate_state = search_algorithm_template.validate_state
+BOARD_SIZE = SearchAlgorithms.BOARD_SIZE
+DEFAULT_START = SearchAlgorithms.DEFAULT_START
+GOAL = SearchAlgorithms.GOAL
+NOT_USED_LABEL = SearchAlgorithms.NOT_USED_LABEL
+TILE_COUNT = SearchAlgorithms.TILE_COUNT
+UI_HEURISTIC_LABELS = SearchAlgorithms.UI_HEURISTIC_LABELS
+heuristic_values = SearchAlgorithms.heuristic_values
+is_solvable = SearchAlgorithms.is_solvable
+normalize_heuristic_name = SearchAlgorithms.normalize_heuristic_name
+run_selected_algorithm = SearchAlgorithms.run_selected_algorithm
+successors = SearchAlgorithms.successors
+validate_state = SearchAlgorithms.validate_state
 
 WEB_APP_HTML = r"""<!doctype html>
 <html lang="en">

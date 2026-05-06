@@ -129,7 +129,7 @@ path, fullPath, totalCost
 ## Five Project Parts Without UI
 
 1. State handling: stores the 8-puzzle as a flat 9-number list and validates that the numbers `0` to `8` appear exactly once.
-2. Solvability and movement: checks inversion parity and generates legal moves for the blank tile using `successors`.
+2. Solvability and movement: checks inversion parity and generates legal moves for the blank tile using `SearchAlgorithms.successors`.
 3. Heuristics: calculates Misplaced Tiles, Manhattan Distance, and Linear Conflict for informed search.
 4. Search algorithms: runs UCS, A*, Greedy, BFS, and DFS through the `SearchAlgorithms` class.
 5. Results and checks: returns `path`, `fullPath`, and `totalCost`, then supports self-test and benchmark runs.
@@ -139,7 +139,7 @@ path, fullPath, totalCost
 | Person | Project part | Main responsibility |
 |---|---|---|
 | Person 1 | State handling | Validate input, represent the board, and explain the `0` blank tile. |
-| Person 2 | Solvability and movement | Explain inversion parity and how `successors` creates legal moves. |
+| Person 2 | Solvability and movement | Explain inversion parity and how `SearchAlgorithms.successors` creates legal moves. |
 | Person 3 | Heuristics | Explain Misplaced Tiles, Manhattan Distance, and Linear Conflict. |
 | Person 4 | Search algorithms | Explain and test UCS, A*, Greedy, BFS, and DFS in `SearchAlgorithms`. |
 | Person 5 | Results and testing | Explain `path`, `fullPath`, `totalCost`, self-test, and benchmark output. |
@@ -199,8 +199,8 @@ linear_conflict >= manhattan >= misplaced
 ## Main Solver Code Parts
 
 - `Node` stores one search-tree state, its parent, the action that produced it, `g(n)`, and `h(n)`.
-- `successors`, `validate_state`, and `is_solvable` handle puzzle rules before search starts.
-- `misplaced`, `manhattan`, and `linear_conflict` calculate heuristic values.
+- `SearchAlgorithms` owns the puzzle rules, including `validate_state`, `is_solvable`, and `successors`.
+- `SearchAlgorithms` owns the heuristics: `misplaced`, `manhattan`, and `linear_conflict`.
 - `SearchAlgorithms` exposes `UCS`, `Astar`, `Greedy`, `BFS`, and `DFS`.
 - Command-line options provide demo, benchmark, and self-test checks.
 
