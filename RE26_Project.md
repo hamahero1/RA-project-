@@ -53,6 +53,16 @@ Each method returns exactly three values:
 path, fullPath, totalCost
 ```
 
+## Five Project Parts Without UI
+
+The project can be explained in five solver-only parts:
+
+1. State handling: the puzzle is represented as a flat list of 9 numbers, and the code validates that every value from `0` to `8` is used once.
+2. Solvability and moves: the code checks inversion parity and creates valid next states by moving the blank tile up, down, left, or right.
+3. Heuristics: the code provides Misplaced Tiles, Manhattan Distance, and Linear Conflict.
+4. Search algorithms: the `SearchAlgorithms` class includes UCS, A*, Greedy, BFS, and DFS.
+5. Output and testing: each algorithm returns `path`, `fullPath`, and `totalCost`; the file also includes self-test and benchmark commands.
+
 ## State Representation
 
 The puzzle state is represented as a flat list of 9 numbers.

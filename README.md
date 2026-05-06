@@ -126,6 +126,14 @@ path, fullPath, totalCost
 - `fullPath` is the list of board states from start to goal.
 - `totalCost` is the number of moves, or `-1` if no solution exists.
 
+## Five Project Parts Without UI
+
+1. State handling: stores the 8-puzzle as a flat 9-number list and validates that the numbers `0` to `8` appear exactly once.
+2. Solvability and movement: checks inversion parity and generates legal moves for the blank tile using `successors`.
+3. Heuristics: calculates Misplaced Tiles, Manhattan Distance, and Linear Conflict for informed search.
+4. Search algorithms: runs UCS, A*, Greedy, BFS, and DFS through the `SearchAlgorithms` class.
+5. Results and checks: returns `path`, `fullPath`, and `totalCost`, then supports self-test and benchmark runs.
+
 ## Algorithms
 
 ### UCS
@@ -178,16 +186,13 @@ The expected dominance order is:
 linear_conflict >= manhattan >= misplaced
 ```
 
-## Main Code Parts
+## Main Solver Code Parts
 
 - `Node` stores one search-tree state, its parent, the action that produced it, `g(n)`, and `h(n)`.
-- `SearchAlgorithms` exposes the required `UCS`, `Astar`, and `Greedy` methods.
-- Bonus methods `BFS` and `DFS` are also implemented.
-- `successors` generates all valid next states by swapping the blank with an adjacent tile.
+- `successors`, `validate_state`, and `is_solvable` handle puzzle rules before search starts.
 - `misplaced`, `manhattan`, and `linear_conflict` calculate heuristic values.
-- `PuzzleWebHandler` in `UI.py` serves the browser UI and connects UI actions to the solver.
-- `EightPuzzleApp` in `UI.py` keeps an optional Tkinter UI for Python installations with working Tk support.
-- `run_demo`, `run_benchmark`, and `run_self_test` in `SearchAlgorithms2 - Template .py` provide command-line workflows.
+- `SearchAlgorithms` exposes `UCS`, `Astar`, `Greedy`, `BFS`, and `DFS`.
+- `run_demo`, `run_benchmark`, and `run_self_test` provide command-line checks.
 
 ## GitHub Setup
 
