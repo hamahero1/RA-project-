@@ -202,6 +202,7 @@ linear_conflict >= manhattan >= misplaced
 - `SearchAlgorithms` owns the puzzle rules, including `validate_state`, `is_solvable`, and `successors`.
 - `SearchAlgorithms` owns the heuristics: `misplaced`, `manhattan`, and `linear_conflict`.
 - `SearchAlgorithms` exposes `UCS`, `Astar`, `Greedy`, `BFS`, and `DFS`.
+- Each algorithm method contains its own full search loop and conditions instead of calling a shared algorithm runner.
 - Command-line options provide demo, benchmark, and self-test checks.
 
 ## GitHub Setup

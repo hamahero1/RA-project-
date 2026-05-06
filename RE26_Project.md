@@ -60,7 +60,7 @@ The project can be explained in five solver-only parts:
 1. State handling: the puzzle is represented as a flat list of 9 numbers, and the code validates that every value from `0` to `8` is used once.
 2. Solvability and moves: `SearchAlgorithms` checks inversion parity and creates valid next states by moving the blank tile up, down, left, or right.
 3. Heuristics: `SearchAlgorithms` provides Misplaced Tiles, Manhattan Distance, and Linear Conflict.
-4. Search algorithms: `SearchAlgorithms` includes UCS, A*, Greedy, BFS, and DFS.
+4. Search algorithms: `SearchAlgorithms` includes UCS, A*, Greedy, BFS, and DFS, and each method contains its own full search loop.
 5. Output and testing: each algorithm returns `path`, `fullPath`, and `totalCost`; `SearchAlgorithms` also includes self-test and benchmark commands.
 
 ## Five Person Work Split
