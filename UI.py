@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import random
 import threading
 import webbrowser
 from collections.abc import Sequence
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from urllib.parse import urlparse
 
 try:
@@ -17,21 +19,27 @@ except ImportError:
     ttk = None
     messagebox = None
 
-from search_algorithms import (
-    BOARD_SIZE,
-    DEFAULT_START,
-    GOAL,
-    NOT_USED_LABEL,
-    TILE_COUNT,
-    UI_HEURISTIC_LABELS,
-    SearchAlgorithms,
-    heuristic_values,
-    is_solvable,
-    normalize_heuristic_name,
-    run_selected_algorithm,
-    successors,
-    validate_state,
-)
+SOLVER_FILE = Path(__file__).with_name("SearchAlgorithms2 - Template .py")
+SOLVER_SPEC = importlib.util.spec_from_file_location("search_algorithm_template", SOLVER_FILE)
+if SOLVER_SPEC is None or SOLVER_SPEC.loader is None:
+    raise ImportError("Cannot load the search algorithm file.")
+
+search_algorithm_template = importlib.util.module_from_spec(SOLVER_SPEC)
+SOLVER_SPEC.loader.exec_module(search_algorithm_template)
+
+BOARD_SIZE = search_algorithm_template.BOARD_SIZE
+DEFAULT_START = search_algorithm_template.DEFAULT_START
+GOAL = search_algorithm_template.GOAL
+NOT_USED_LABEL = search_algorithm_template.NOT_USED_LABEL
+TILE_COUNT = search_algorithm_template.TILE_COUNT
+UI_HEURISTIC_LABELS = search_algorithm_template.UI_HEURISTIC_LABELS
+SearchAlgorithms = search_algorithm_template.SearchAlgorithms
+heuristic_values = search_algorithm_template.heuristic_values
+is_solvable = search_algorithm_template.is_solvable
+normalize_heuristic_name = search_algorithm_template.normalize_heuristic_name
+run_selected_algorithm = search_algorithm_template.run_selected_algorithm
+successors = search_algorithm_template.successors
+validate_state = search_algorithm_template.validate_state
 
 WEB_APP_HTML = r"""<!doctype html>
 <html lang="en">

@@ -4,7 +4,7 @@ This project solves the 8-puzzle problem with Uniform Cost Search, A*, Greedy Be
 
 ## Files
 
-- `search_algorithms.py` - the solver, heuristics, command-line tools, tests, and benchmark.
+- `SearchAlgorithms2 - Template .py` - the solver, heuristics, bonus BFS/DFS, command-line tools, tests, benchmark, and required unchanged assignment `main()` function.
 - `UI.py` - the browser UI and optional Tkinter UI.
 - `RA26 project.docx` - the original project description.
 - `.gitignore` - ignores Python cache files, virtual environments, and local editor files.
@@ -52,19 +52,19 @@ Open that URL in a browser if it does not open automatically.
 Run the built-in demo:
 
 ```powershell
-python search_algorithms.py --cli
+python "SearchAlgorithms2 - Template .py" --cli
 ```
 
 Run a benchmark:
 
 ```powershell
-python search_algorithms.py --benchmark
+python "SearchAlgorithms2 - Template .py" --benchmark
 ```
 
 Run quick correctness checks:
 
 ```powershell
-python search_algorithms.py --self-test
+python "SearchAlgorithms2 - Template .py" --self-test
 ```
 
 Run the optional Tkinter UI:
@@ -76,7 +76,7 @@ python UI.py --tk
 Run one algorithm:
 
 ```powershell
-python search_algorithms.py --algorithm "A*" --heuristic manhattan --start "1 2 3 4 0 6 7 5 8"
+python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan --start "1 2 3 4 0 6 7 5 8"
 ```
 
 ## UI Flow
@@ -187,7 +187,7 @@ linear_conflict >= manhattan >= misplaced
 - `misplaced`, `manhattan`, and `linear_conflict` calculate heuristic values.
 - `PuzzleWebHandler` in `UI.py` serves the browser UI and connects UI actions to the solver.
 - `EightPuzzleApp` in `UI.py` keeps an optional Tkinter UI for Python installations with working Tk support.
-- `run_demo`, `run_benchmark`, and `run_self_test` in `search_algorithms.py` provide command-line workflows.
+- `run_demo`, `run_benchmark`, and `run_self_test` in `SearchAlgorithms2 - Template .py` provide command-line workflows.
 
 ## GitHub Setup
 

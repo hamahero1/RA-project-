@@ -35,11 +35,11 @@ The project includes:
 The project is split into two Python files:
 
 ```text
-search_algorithms.py
+SearchAlgorithms2 - Template .py
 UI.py
 ```
 
-`search_algorithms.py` contains the required `SearchAlgorithms` class and the three required methods:
+The old `search_algorithms.py` file was removed. `SearchAlgorithms2 - Template .py` is now the search algorithm file and contains the required `SearchAlgorithms` class and the three required methods:
 
 ```python
 UCS()
@@ -334,7 +334,7 @@ Total cost:
 
 ```text
 UI.py
-search_algorithms.py
+SearchAlgorithms2 - Template .py
 ```
 
 5. Set it as the startup file.
@@ -345,19 +345,19 @@ search_algorithms.py
 Run the self-test:
 
 ```powershell
-python search_algorithms.py --self-test
+python "SearchAlgorithms2 - Template .py" --self-test
 ```
 
 Run benchmark:
 
 ```powershell
-python search_algorithms.py --benchmark
+python "SearchAlgorithms2 - Template .py" --benchmark
 ```
 
 Run one algorithm:
 
 ```powershell
-python search_algorithms.py --algorithm "A*" --heuristic manhattan --start "123406758"
+python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan --start "123406758"
 ```
 
 ## Bonus Checklist
