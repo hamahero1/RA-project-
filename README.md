@@ -4,7 +4,7 @@ This project solves the 8-puzzle problem with Uniform Cost Search, A*, Greedy Be
 
 ## Files
 
-- `SearchAlgorithms2 - Template .py` - the solver, heuristics, bonus BFS/DFS, command-line tools, tests, benchmark, and required unchanged assignment `main()` function.
+- `SearchAlgorithms2 - Template .py` - the required solver file with `Node`, `SearchAlgorithms`, UCS, A*, Greedy, bonus BFS/DFS, and the assignment `main()` function.
 - `UI.py` - the browser UI and optional Tkinter UI.
 - `RA26 project.docx` - the original project description.
 - `.gitignore` - ignores Python cache files, virtual environments, and local editor files.
@@ -49,34 +49,16 @@ Open that URL in a browser if it does not open automatically.
 
 ## Command-Line Usage
 
-Run the built-in demo:
+Run the required assignment file:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --cli
-```
-
-Run a benchmark:
-
-```powershell
-python "SearchAlgorithms2 - Template .py" --benchmark
-```
-
-Run quick correctness checks:
-
-```powershell
-python "SearchAlgorithms2 - Template .py" --self-test
+python "SearchAlgorithms2 - Template .py"
 ```
 
 Run the optional Tkinter UI:
 
 ```powershell
 python UI.py --tk
-```
-
-Run one algorithm:
-
-```powershell
-python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan --start "1 2 3 4 0 6 7 5 8"
 ```
 
 ## UI Flow
@@ -129,10 +111,10 @@ path, fullPath, totalCost
 ## Five Project Parts Without UI
 
 1. State handling: stores the 8-puzzle as a flat 9-number list and validates that the numbers `0` to `8` appear exactly once.
-2. Solvability and movement: checks inversion parity and generates legal moves for the blank tile using `SearchAlgorithms.successors`.
+2. Solvability and movement: checks inversion parity and generates legal moves inside each algorithm method.
 3. Heuristics: calculates Misplaced Tiles, Manhattan Distance, and Linear Conflict for informed search.
 4. Search algorithms: runs UCS, A*, Greedy, BFS, and DFS through the `SearchAlgorithms` class.
-5. Results and checks: returns `path`, `fullPath`, and `totalCost`, then supports self-test and benchmark runs.
+5. Results and checks: each algorithm returns `path`, `fullPath`, and `totalCost`.
 
 ## Five Person Work Split
 
@@ -199,11 +181,9 @@ linear_conflict >= manhattan >= misplaced
 ## Main Solver Code Parts
 
 - `Node` stores one search-tree state, its parent, the action that produced it, `g(n)`, and `h(n)`.
-- `SearchAlgorithms` owns the puzzle rules, including `validate_state`, `is_solvable`, and `successors`.
-- `SearchAlgorithms` owns the heuristics: `misplaced`, `manhattan`, and `linear_conflict`.
-- `SearchAlgorithms` exposes `UCS`, `Astar`, `Greedy`, `BFS`, and `DFS`.
-- Each algorithm method contains its own full search loop and conditions instead of calling a shared algorithm runner.
-- Command-line options provide demo, benchmark, and self-test checks.
+- `SearchAlgorithms` exposes only `UCS`, `Astar`, `Greedy`, `BFS`, and `DFS` after `__init__`.
+- Each algorithm method contains its own validation, solvability check, successor generation, search loop, path reconstruction, and stats.
+- The required `main()` function stays outside the class and runs UCS, A*, and Greedy.
 
 ## GitHub Setup
 

@@ -61,7 +61,7 @@ The project can be explained in five solver-only parts:
 2. Solvability and moves: `SearchAlgorithms` checks inversion parity and creates valid next states by moving the blank tile up, down, left, or right.
 3. Heuristics: `SearchAlgorithms` provides Misplaced Tiles, Manhattan Distance, and Linear Conflict.
 4. Search algorithms: `SearchAlgorithms` includes UCS, A*, Greedy, BFS, and DFS, and each method contains its own full search loop.
-5. Output and testing: each algorithm returns `path`, `fullPath`, and `totalCost`; `SearchAlgorithms` also includes self-test and benchmark commands.
+5. Output and testing: each algorithm returns `path`, `fullPath`, and `totalCost`.
 
 ## Five Person Work Split
 
@@ -362,22 +362,10 @@ SearchAlgorithms2 - Template .py
 
 ## Command-Line Tests
 
-Run the self-test:
+Run the required assignment file:
 
 ```powershell
-python "SearchAlgorithms2 - Template .py" --self-test
-```
-
-Run benchmark:
-
-```powershell
-python "SearchAlgorithms2 - Template .py" --benchmark
-```
-
-Run one algorithm:
-
-```powershell
-python "SearchAlgorithms2 - Template .py" --algorithm "A*" --heuristic manhattan --start "123406758"
+python "SearchAlgorithms2 - Template .py"
 ```
 
 ## Bonus Checklist

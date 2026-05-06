@@ -34,12 +34,140 @@ GOAL = SearchAlgorithms.GOAL
 NOT_USED_LABEL = SearchAlgorithms.NOT_USED_LABEL
 TILE_COUNT = SearchAlgorithms.TILE_COUNT
 UI_HEURISTIC_LABELS = SearchAlgorithms.UI_HEURISTIC_LABELS
-heuristic_values = SearchAlgorithms.heuristic_values
-is_solvable = SearchAlgorithms.is_solvable
-normalize_heuristic_name = SearchAlgorithms.normalize_heuristic_name
-run_selected_algorithm = SearchAlgorithms.run_selected_algorithm
-successors = SearchAlgorithms.successors
-validate_state = SearchAlgorithms.validate_state
+
+
+def validate_state(values: Sequence[int] | str, label: str = "state") -> tuple[int, ...]:
+    if isinstance(values, str):
+        cleaned = values.replace(",", " ").replace(";", " ")
+        parts = cleaned.split()
+        if len(parts) == 1 and len(parts[0]) == TILE_COUNT and parts[0].isdigit():
+            parsed = tuple(int(part) for part in parts[0])
+        else:
+            try:
+                parsed = tuple(int(part) for part in parts)
+            except ValueError as exc:
+                raise ValueError(f"{label} must contain only numbers from 0 to 8.") from exc
+    else:
+        parsed = tuple(int(value) for value in values)
+
+    if len(parsed) != TILE_COUNT:
+        raise ValueError(f"{label} must contain exactly 9 numbers.")
+    if sorted(parsed) != list(range(TILE_COUNT)):
+        raise ValueError(f"{label} must contain each number from 0 to 8 exactly once.")
+    return parsed
+
+
+def count_inversions(state: Sequence[int]) -> int:
+    tiles = [tile for tile in state if tile != 0]
+    inversions = 0
+    for left in range(len(tiles)):
+        for right in range(left + 1, len(tiles)):
+            if tiles[left] > tiles[right]:
+                inversions += 1
+    return inversions
+
+
+def is_solvable(start: Sequence[int], goal: Sequence[int] = GOAL) -> bool:
+    return count_inversions(validate_state(start, "start")) % 2 == count_inversions(validate_state(goal, "goal")) % 2
+
+
+def successors(state: Sequence[int]) -> list[tuple[str, tuple[int, ...]]]:
+    state = validate_state(state)
+    blank = state.index(0)
+    row, col = divmod(blank, BOARD_SIZE)
+    moves = []
+    if row > 0:
+        moves.append(("UP", blank - BOARD_SIZE))
+    if row < BOARD_SIZE - 1:
+        moves.append(("DOWN", blank + BOARD_SIZE))
+    if col > 0:
+        moves.append(("LEFT", blank - 1))
+    if col < BOARD_SIZE - 1:
+        moves.append(("RIGHT", blank + 1))
+
+    result = []
+    for action, swap_index in moves:
+        next_state = list(state)
+        next_state[blank], next_state[swap_index] = next_state[swap_index], next_state[blank]
+        result.append((action, tuple(next_state)))
+    return result
+
+
+def normalize_heuristic_name(name: str | None) -> str:
+    if not name:
+        return "manhattan"
+    key = str(name).strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "h1": "misplaced",
+        "misplaced_tiles": "misplaced",
+        "h2": "manhattan",
+        "manhattan_distance": "manhattan",
+        "h3": "linear_conflict",
+        "linear": "linear_conflict",
+        "not_used": "zero",
+        "none": "zero",
+    }
+    return aliases.get(key, key)
+
+
+def heuristic_values(state: Sequence[int], goal: Sequence[int] = GOAL) -> dict[str, int]:
+    state = validate_state(state)
+    goal = validate_state(goal, "goal")
+    goal_positions = {tile: divmod(index, BOARD_SIZE) for index, tile in enumerate(goal)}
+
+    misplaced = sum(tile != 0 and tile != goal[index] for index, tile in enumerate(state))
+    manhattan = 0
+    for index, tile in enumerate(state):
+        if tile == 0:
+            continue
+        row, col = divmod(index, BOARD_SIZE)
+        goal_row, goal_col = goal_positions[tile]
+        manhattan += abs(row - goal_row) + abs(col - goal_col)
+
+    conflicts = 0
+    for row in range(BOARD_SIZE):
+        row_tiles = state[row * BOARD_SIZE : (row + 1) * BOARD_SIZE]
+        goal_columns = [
+            goal_positions[tile][1]
+            for tile in row_tiles
+            if tile != 0 and goal_positions[tile][0] == row
+        ]
+        for left in range(len(goal_columns)):
+            for right in range(left + 1, len(goal_columns)):
+                if goal_columns[left] > goal_columns[right]:
+                    conflicts += 1
+    for col in range(BOARD_SIZE):
+        column_tiles = [state[row * BOARD_SIZE + col] for row in range(BOARD_SIZE)]
+        goal_rows = [
+            goal_positions[tile][0]
+            for tile in column_tiles
+            if tile != 0 and goal_positions[tile][1] == col
+        ]
+        for left in range(len(goal_rows)):
+            for right in range(left + 1, len(goal_rows)):
+                if goal_rows[left] > goal_rows[right]:
+                    conflicts += 1
+
+    return {
+        "misplaced": misplaced,
+        "manhattan": manhattan,
+        "linear_conflict": manhattan + (2 * conflicts),
+    }
+
+
+def run_selected_algorithm(solver: SearchAlgorithms, algorithm: str, heuristic: str = "manhattan"):
+    normalized = str(algorithm).strip().lower().replace("*", "star").replace(" ", "_")
+    if normalized == "ucs":
+        return solver.UCS()
+    if normalized in {"astar", "a_star"}:
+        return solver.Astar(heuristic)
+    if normalized == "greedy":
+        return solver.Greedy(heuristic)
+    if normalized == "bfs":
+        return solver.BFS()
+    if normalized == "dfs":
+        return solver.DFS()
+    raise ValueError(f"Unknown algorithm: {algorithm}")
 
 WEB_APP_HTML = r"""<!doctype html>
 <html lang="en">
