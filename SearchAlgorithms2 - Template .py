@@ -76,140 +76,105 @@ class SearchAlgorithms:
         heuristic_name = "zero"
         started_at = time.perf_counter()
 
-        # Part 1: check if this puzzle can reach the goal.
-        start_tiles = [tile for tile in self.start if tile != 0]
-        goal_tiles = [tile for tile in self.end if tile != 0]
-        start_inversions = 0
-        goal_inversions = 0
-        for left in range(len(start_tiles)):
-            for right in range(left + 1, len(start_tiles)):
-                if start_tiles[left] > start_tiles[right]:
-                    start_inversions += 1
-                if goal_tiles[left] > goal_tiles[right]:
-                    goal_inversions += 1
-
-        if start_inversions % 2 != goal_inversions % 2:
-            self.Path = []
-            self.fullPath = [list(self.start)]
-            self.totalCost = -1
-            self.last_stats = {
+        def build_stats(solvable, success, expanded, generated, frontier_max, cost):
+            return {
                 "algorithm": algorithm,
                 "heuristic": heuristic_name,
-                "solvable": False,
-                "success": False,
-                "expanded": 0,
-                "generated": 1,
-                "frontier_max": 1,
-                "cost": -1,
+                "solvable": solvable,
+                "success": success,
+                "expanded": expanded,
+                "generated": generated,
+                "frontier_max": frontier_max,
+                "cost": cost,
                 "runtime_ms": round((time.perf_counter() - started_at) * 1000, 3),
             }
+
+        def get_inversions(state):
+            tiles = [tile for tile in state if tile != 0]
+            return sum(
+                1
+                for left in range(len(tiles))
+                for right in range(left + 1, len(tiles))
+                if tiles[left] > tiles[right]
+            )
+
+        # Part 1: solvability check.
+        if get_inversions(self.start) % 2 != get_inversions(self.end) % 2:
+            self.Path, self.fullPath, self.totalCost = [], [list(self.start)], -1
+            self.last_stats = build_stats(False, False, 0, 1, 1, -1)
             return self.Path, self.fullPath, self.totalCost
 
-        # Part 2: create the start node and UCS priority queue.
+        # Part 2: initialize.
         start_node = Node(list(self.start))
-        start_node.state = self.start
-        start_node.parent = None
-        start_node.parentstate = None
-        start_node.action = None
-        start_node.edgeCost = 0
-        start_node.gOfN = 0
-        start_node.hOfN = 0
+        start_node.state, start_node.parent = self.start, None
+        start_node.parentstate, start_node.edgeCost = None, 0
+        start_node.action, start_node.gOfN, start_node.hOfN = None, 0, 0
         start_node.heuristicFn = heuristic_name
 
-        frontier = []
-        heapq.heappush(frontier, (0, 0, 0, start_node))
-        best_cost_to_state = {self.start: 0}
-        counter = 0
-        expanded = 0
-        generated = 1
-        frontier_max = 1
+        frontier = [(0, 0, 0, start_node)]
+        best_g = {self.start: 0}
+        counter = expanded = 0
+        generated = frontier_max = 1
 
-        # Part 3: run UCS with path cost g(n) as the priority.
+        # Part 3: search loop.
         while frontier:
             _, _, _, current = heapq.heappop(frontier)
-            if current.gOfN > best_cost_to_state.get(current.state, 999999999):
+            if current.gOfN > best_g.get(current.state, float("inf")):
                 continue
 
             if current.state == self.end:
-                # Part 4: rebuild path, fullPath, cost, and statistics.
-                actions = []
-                states = []
+                actions, states = [], []
                 node = current
-                while node is not None:
+                while node:
                     states.append(list(node.state))
-                    if node.action is not None:
+                    if node.action:
                         actions.append(node.action)
                     node = node.parent
-                actions.reverse()
-                states.reverse()
-                self.Path = actions
-                self.fullPath = states
-                self.totalCost = len(actions)
-                self.last_stats = {
-                    "algorithm": algorithm,
-                    "heuristic": heuristic_name,
-                    "solvable": True,
-                    "success": True,
-                    "expanded": expanded,
-                    "generated": generated,
-                    "frontier_max": frontier_max,
-                    "cost": self.totalCost,
-                    "runtime_ms": round((time.perf_counter() - started_at) * 1000, 3),
-                }
+                self.Path = actions[::-1]
+                self.fullPath = states[::-1]
+                self.totalCost = len(self.Path)
+                self.last_stats = build_stats(True, True, expanded, generated, frontier_max, self.totalCost)
                 return self.Path, self.fullPath, self.totalCost
 
             expanded += 1
             blank = current.state.index(0)
             row, col = divmod(blank, BOARD_SIZE)
-            moves = []
-            if row > 0:
-                moves.append(("UP", blank - BOARD_SIZE))
-            if row < BOARD_SIZE - 1:
-                moves.append(("DOWN", blank + BOARD_SIZE))
-            if col > 0:
-                moves.append(("LEFT", blank - 1))
-            if col < BOARD_SIZE - 1:
-                moves.append(("RIGHT", blank + 1))
 
-            for action, swap_index in moves:
+            neighbors = []
+            if row > 0:
+                neighbors.append(("UP", blank - BOARD_SIZE))
+            if row < BOARD_SIZE - 1:
+                neighbors.append(("DOWN", blank + BOARD_SIZE))
+            if col > 0:
+                neighbors.append(("LEFT", blank - 1))
+            if col < BOARD_SIZE - 1:
+                neighbors.append(("RIGHT", blank + 1))
+
+            for action, swap in neighbors:
                 next_state = list(current.state)
-                next_state[blank], next_state[swap_index] = next_state[swap_index], next_state[blank]
+                next_state[blank], next_state[swap] = next_state[swap], next_state[blank]
                 next_state = tuple(next_state)
-                new_cost = current.gOfN + 1
-                if new_cost >= best_cost_to_state.get(next_state, 999999999):
+                new_g = current.gOfN + 1
+
+                if new_g >= best_g.get(next_state, float("inf")):
                     continue
 
                 child = Node(list(next_state))
-                child.state = next_state
-                child.parent = current
+                child.state, child.parent = next_state, current
                 child.parentstate = list(current.state)
-                child.action = action
                 child.edgeCost = 1
-                child.gOfN = new_cost
-                child.hOfN = 0
+                child.action, child.gOfN, child.hOfN = action, new_g, 0
                 child.heuristicFn = heuristic_name
-                best_cost_to_state[next_state] = new_cost
+                best_g[next_state] = new_g
                 counter += 1
                 generated += 1
-                heapq.heappush(frontier, (new_cost, 0, counter, child))
+                heapq.heappush(frontier, (new_g, 0, counter, child))
 
             frontier_max = max(frontier_max, len(frontier))
 
-        # Part 5: return failure if the queue ends without the goal.
-        self.Path = []
-        self.fullPath = []
-        self.totalCost = -1
-        self.last_stats = {
-            "algorithm": algorithm,
-            "heuristic": heuristic_name,
-            "solvable": True,
-            "success": False,
-            "expanded": expanded,
-            "generated": generated,
-            "frontier_max": frontier_max,
-            "cost": -1,
-            "runtime_ms": round((time.perf_counter() - started_at) * 1000, 3),
-        }
+        # Part 4: failure.
+        self.Path, self.fullPath, self.totalCost = [], [], -1
+        self.last_stats = build_stats(True, False, expanded, generated, frontier_max, -1)
         return self.Path, self.fullPath, self.totalCost
 
     def Astar(self, heuristic=None):
