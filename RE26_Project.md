@@ -302,7 +302,7 @@ The UI benchmark table contains:
 |---|---|
 | Algorithm | UCS, A*, or Greedy |
 | Cost | Solution cost |
-| Experience | Number of expanded states |
+| Expanded | Number of expanded states |
 | Settings | Heuristic used |
 
 ## Example Solution

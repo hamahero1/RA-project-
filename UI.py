@@ -67,6 +67,20 @@ def count_inversions(state: Sequence[int]) -> int:
     return inversions
 
 
+def minimum_conflict_removals(goal_indexes: Sequence[int]) -> int:
+    if not goal_indexes:
+        return 0
+
+    best = 1
+    lengths = [1] * len(goal_indexes)
+    for right in range(len(goal_indexes)):
+        for left in range(right):
+            if goal_indexes[left] < goal_indexes[right]:
+                lengths[right] = max(lengths[right], lengths[left] + 1)
+        best = max(best, lengths[right])
+    return len(goal_indexes) - best
+
+
 def is_solvable(start: Sequence[int], goal: Sequence[int] = GOAL) -> bool:
     return count_inversions(validate_state(start, "start")) % 2 == count_inversions(validate_state(goal, "goal")) % 2
 
@@ -132,10 +146,7 @@ def heuristic_values(state: Sequence[int], goal: Sequence[int] = GOAL) -> dict[s
             for tile in row_tiles
             if tile != 0 and goal_positions[tile][0] == row
         ]
-        for left in range(len(goal_columns)):
-            for right in range(left + 1, len(goal_columns)):
-                if goal_columns[left] > goal_columns[right]:
-                    conflicts += 1
+        conflicts += minimum_conflict_removals(goal_columns)
     for col in range(BOARD_SIZE):
         column_tiles = [state[row * BOARD_SIZE + col] for row in range(BOARD_SIZE)]
         goal_rows = [
@@ -143,10 +154,7 @@ def heuristic_values(state: Sequence[int], goal: Sequence[int] = GOAL) -> dict[s
             for tile in column_tiles
             if tile != 0 and goal_positions[tile][1] == col
         ]
-        for left in range(len(goal_rows)):
-            for right in range(left + 1, len(goal_rows)):
-                if goal_rows[left] > goal_rows[right]:
-                    conflicts += 1
+        conflicts += minimum_conflict_removals(goal_rows)
 
     return {
         "misplaced": misplaced,
@@ -560,7 +568,7 @@ WEB_APP_HTML = r"""<!doctype html>
             <tr>
               <th>Algorithm</th>
               <th>Cost</th>
-              <th>Experience</th>
+              <th>Expanded</th>
               <th>Settings</th>
             </tr>
           </thead>
@@ -666,6 +674,21 @@ WEB_APP_HTML = r"""<!doctype html>
       return total;
     }
 
+    function minimumConflictRemovals(values) {
+      if (!values.length) return 0;
+      const lengths = values.map(() => 1);
+      let best = 1;
+      for (let right = 0; right < values.length; right += 1) {
+        for (let left = 0; left < right; left += 1) {
+          if (values[left] < values[right]) {
+            lengths[right] = Math.max(lengths[right], lengths[left] + 1);
+          }
+        }
+        best = Math.max(best, lengths[right]);
+      }
+      return values.length - best;
+    }
+
     function linearConflict(values) {
       let conflicts = 0;
       for (let row = 0; row < 3; row += 1) {
@@ -675,7 +698,7 @@ WEB_APP_HTML = r"""<!doctype html>
           const target = goalIndex(tile);
           if (tile !== 0 && Math.floor(target / 3) === row) goalColumns.push(target % 3);
         }
-        conflicts += countInversions(goalColumns);
+        conflicts += minimumConflictRemovals(goalColumns);
       }
       for (let col = 0; col < 3; col += 1) {
         const goalRows = [];
@@ -684,7 +707,7 @@ WEB_APP_HTML = r"""<!doctype html>
           const target = goalIndex(tile);
           if (tile !== 0 && target % 3 === col) goalRows.push(Math.floor(target / 3));
         }
-        conflicts += countInversions(goalRows);
+        conflicts += minimumConflictRemovals(goalRows);
       }
       return manhattan(values) + (2 * conflicts);
     }

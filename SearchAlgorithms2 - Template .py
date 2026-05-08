@@ -27,6 +27,44 @@ class Node:
         self.value = value
 
 
+def _minimum_conflict_removals(goal_indexes):
+    """Return the fewest tiles to move out so the line is in goal order."""
+    if not goal_indexes:
+        return 0
+
+    best = 1
+    lengths = [1] * len(goal_indexes)
+    for right in range(len(goal_indexes)):
+        for left in range(right):
+            if goal_indexes[left] < goal_indexes[right]:
+                lengths[right] = max(lengths[right], lengths[left] + 1)
+        best = max(best, lengths[right])
+    return len(goal_indexes) - best
+
+
+def _linear_conflict_penalty(state, goal_positions):
+    conflicts = 0
+    for row in range(BOARD_SIZE):
+        row_tiles = state[row * BOARD_SIZE : (row + 1) * BOARD_SIZE]
+        goal_columns = [
+            goal_positions[tile][1]
+            for tile in row_tiles
+            if tile != 0 and goal_positions[tile][0] == row
+        ]
+        conflicts += _minimum_conflict_removals(goal_columns)
+
+    for col in range(BOARD_SIZE):
+        column_tiles = [state[row * BOARD_SIZE + col] for row in range(BOARD_SIZE)]
+        goal_rows = [
+            goal_positions[tile][0]
+            for tile in column_tiles
+            if tile != 0 and goal_positions[tile][1] == col
+        ]
+        conflicts += _minimum_conflict_removals(goal_rows)
+
+    return 2 * conflicts
+
+
 class SearchAlgorithms:
     """Required project class. Every algorithm method contains its own full code."""
 
@@ -237,30 +275,7 @@ class SearchAlgorithms:
                 start_h += abs(row - goal_row) + abs(col - goal_col)
 
             if heuristic_name == "linear_conflict":
-                conflicts = 0
-                for row in range(BOARD_SIZE):
-                    row_tiles = self.start[row * BOARD_SIZE : (row + 1) * BOARD_SIZE]
-                    goal_columns = [
-                        goal_positions[tile][1]
-                        for tile in row_tiles
-                        if tile != 0 and goal_positions[tile][0] == row
-                    ]
-                    for left in range(len(goal_columns)):
-                        for right in range(left + 1, len(goal_columns)):
-                            if goal_columns[left] > goal_columns[right]:
-                                conflicts += 1
-                for col in range(BOARD_SIZE):
-                    column_tiles = [self.start[row * BOARD_SIZE + col] for row in range(BOARD_SIZE)]
-                    goal_rows = [
-                        goal_positions[tile][0]
-                        for tile in column_tiles
-                        if tile != 0 and goal_positions[tile][1] == col
-                    ]
-                    for left in range(len(goal_rows)):
-                        for right in range(left + 1, len(goal_rows)):
-                            if goal_rows[left] > goal_rows[right]:
-                                conflicts += 1
-                start_h += 2 * conflicts
+                start_h += _linear_conflict_penalty(self.start, goal_positions)
         else:
             raise ValueError("Unknown heuristic: " + str(heuristic_name))
 
@@ -352,30 +367,7 @@ class SearchAlgorithms:
                         next_h += abs(current_row - goal_row) + abs(current_col - goal_col)
 
                     if heuristic_name == "linear_conflict":
-                        conflicts = 0
-                        for conflict_row in range(BOARD_SIZE):
-                            row_tiles = next_state[conflict_row * BOARD_SIZE : (conflict_row + 1) * BOARD_SIZE]
-                            goal_columns = [
-                                goal_positions[tile][1]
-                                for tile in row_tiles
-                                if tile != 0 and goal_positions[tile][0] == conflict_row
-                            ]
-                            for left in range(len(goal_columns)):
-                                for right in range(left + 1, len(goal_columns)):
-                                    if goal_columns[left] > goal_columns[right]:
-                                        conflicts += 1
-                        for conflict_col in range(BOARD_SIZE):
-                            column_tiles = [next_state[r * BOARD_SIZE + conflict_col] for r in range(BOARD_SIZE)]
-                            goal_rows = [
-                                goal_positions[tile][0]
-                                for tile in column_tiles
-                                if tile != 0 and goal_positions[tile][1] == conflict_col
-                            ]
-                            for left in range(len(goal_rows)):
-                                for right in range(left + 1, len(goal_rows)):
-                                    if goal_rows[left] > goal_rows[right]:
-                                        conflicts += 1
-                        next_h += 2 * conflicts
+                        next_h += _linear_conflict_penalty(next_state, goal_positions)
 
                 child = Node(list(next_state))
                 child.state = next_state
@@ -470,30 +462,7 @@ class SearchAlgorithms:
                 start_h += abs(row - goal_row) + abs(col - goal_col)
 
             if heuristic_name == "linear_conflict":
-                conflicts = 0
-                for row in range(BOARD_SIZE):
-                    row_tiles = self.start[row * BOARD_SIZE : (row + 1) * BOARD_SIZE]
-                    goal_columns = [
-                        goal_positions[tile][1]
-                        for tile in row_tiles
-                        if tile != 0 and goal_positions[tile][0] == row
-                    ]
-                    for left in range(len(goal_columns)):
-                        for right in range(left + 1, len(goal_columns)):
-                            if goal_columns[left] > goal_columns[right]:
-                                conflicts += 1
-                for col in range(BOARD_SIZE):
-                    column_tiles = [self.start[row * BOARD_SIZE + col] for row in range(BOARD_SIZE)]
-                    goal_rows = [
-                        goal_positions[tile][0]
-                        for tile in column_tiles
-                        if tile != 0 and goal_positions[tile][1] == col
-                    ]
-                    for left in range(len(goal_rows)):
-                        for right in range(left + 1, len(goal_rows)):
-                            if goal_rows[left] > goal_rows[right]:
-                                conflicts += 1
-                start_h += 2 * conflicts
+                start_h += _linear_conflict_penalty(self.start, goal_positions)
         else:
             raise ValueError("Unknown heuristic: " + str(heuristic_name))
 
@@ -585,30 +554,7 @@ class SearchAlgorithms:
                         next_h += abs(current_row - goal_row) + abs(current_col - goal_col)
 
                     if heuristic_name == "linear_conflict":
-                        conflicts = 0
-                        for conflict_row in range(BOARD_SIZE):
-                            row_tiles = next_state[conflict_row * BOARD_SIZE : (conflict_row + 1) * BOARD_SIZE]
-                            goal_columns = [
-                                goal_positions[tile][1]
-                                for tile in row_tiles
-                                if tile != 0 and goal_positions[tile][0] == conflict_row
-                            ]
-                            for left in range(len(goal_columns)):
-                                for right in range(left + 1, len(goal_columns)):
-                                    if goal_columns[left] > goal_columns[right]:
-                                        conflicts += 1
-                        for conflict_col in range(BOARD_SIZE):
-                            column_tiles = [next_state[r * BOARD_SIZE + conflict_col] for r in range(BOARD_SIZE)]
-                            goal_rows = [
-                                goal_positions[tile][0]
-                                for tile in column_tiles
-                                if tile != 0 and goal_positions[tile][1] == conflict_col
-                            ]
-                            for left in range(len(goal_rows)):
-                                for right in range(left + 1, len(goal_rows)):
-                                    if goal_rows[left] > goal_rows[right]:
-                                        conflicts += 1
-                        next_h += 2 * conflicts
+                        next_h += _linear_conflict_penalty(next_state, goal_positions)
 
                 child = Node(list(next_state))
                 child.state = next_state
