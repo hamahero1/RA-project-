@@ -227,7 +227,7 @@ class SearchAlgorithms:
             "h3": "linear_conflict",
             "linear": "linear_conflict",
         }
-        heuristic_name = heuristic_aliases.get(heuristic_name, heuriste heuristics are implemented inside the solver file as partic_name)
+        heuristic_name = heuristic_aliases.get(heuristic_name, heuristic_name)
         started_at = time.perf_counter()
 
         # Part 1: check if this puzzle can reach the goal.
