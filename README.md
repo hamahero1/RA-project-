@@ -67,8 +67,9 @@ python UI.py --tk
 2. Choose an algorithm: `UCS`, `A*`, `Greedy`, `BFS`, or `DFS`.
 3. Choose a heuristic for A* or Greedy: `Misplaced Tiles`, `Manhattan Distance`, or `Linear Conflict`.
 4. Press `Solve`.
-5. Use `Step` to move one state at a time, or `Animate` to play the full solution.
-6. Press `Benchmark` to compare UCS, A*, and Greedy across the available heuristics.
+5. Read `Solution moves` for the returned `path`, and `Full path` for every returned board state.
+6. Use `Step` to move one state at a time, or `Animate` to play the full solution.
+7. Press `Benchmark` to compare UCS, A*, and Greedy across the available heuristics.
 
 When `UCS` is selected, the heuristic menu is disabled and shows `Not used`, because UCS uses only path cost. The benchmark table shows `Algorithm`, `Cost`, `Expanded`, and `Settings`. `Reset` returns to the last loaded or shuffled puzzle, not always the built-in sample. `Shuffle` and `Reset` clear old solution and benchmark results. The `Step` button shows the next move before applying it, then records the completed move so the board and movement text stay synced. Tiles next to the blank are highlighted. Clicking a highlighted tile moves it into the blank position.
 

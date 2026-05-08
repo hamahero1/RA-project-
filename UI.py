@@ -439,6 +439,64 @@ WEB_APP_HTML = r"""<!doctype html>
       overflow: auto;
     }
 
+    .full-path {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+      gap: 10px;
+      max-height: 260px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .path-state {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 8px;
+    }
+
+    .path-state.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    }
+
+    .path-state-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .mini-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+
+    .mini-cell {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border-radius: 5px;
+      background: #e2e8f0;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .mini-cell.blank {
+      background: var(--blank);
+      color: transparent;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -563,6 +621,9 @@ WEB_APP_HTML = r"""<!doctype html>
         <h2 class="panel-title">Solution moves</h2>
         <div id="moves" class="moves">Already solved</div>
 
+        <h2 class="panel-title">Full path</h2>
+        <div id="full-path" class="full-path"></div>
+
         <table>
           <thead>
             <tr>
@@ -596,6 +657,7 @@ WEB_APP_HTML = r"""<!doctype html>
     const notUsedOption = document.getElementById("not-used-option");
     const statusEl = document.getElementById("status");
     const movesEl = document.getElementById("moves");
+    const fullPathEl = document.getElementById("full-path");
     const benchmarkBody = document.getElementById("benchmark-body");
 
     function setStatus(text) {
@@ -727,6 +789,7 @@ WEB_APP_HTML = r"""<!doctype html>
       document.getElementById("stat-generated").textContent = "-";
       document.getElementById("stat-runtime").textContent = "-";
       movesEl.textContent = sameState(state, goal) ? "Already solved" : "No solution yet";
+      renderFullPath();
       benchmarkBody.innerHTML = "";
     }
 
@@ -749,6 +812,43 @@ WEB_APP_HTML = r"""<!doctype html>
       lines.push(nextMove ? `Next move: ${nextMove}` : "Goal reached");
       lines.push(`Progress: ${Math.min(solutionIndex, total)}/${total}`);
       movesEl.textContent = lines.join("\n");
+    }
+
+    function renderFullPath() {
+      fullPathEl.innerHTML = "";
+
+      if (!solutionStates.length) {
+        const empty = document.createElement("div");
+        empty.className = "path-state";
+        empty.textContent = sameState(state, goal) ? "Already solved" : "Solve to show fullPath";
+        fullPathEl.appendChild(empty);
+        return;
+      }
+
+      solutionStates.forEach((pathState, index) => {
+        const item = document.createElement("article");
+        item.className = `path-state${index === solutionIndex ? " active" : ""}`;
+
+        const title = document.createElement("div");
+        title.className = "path-state-title";
+        const stateLabel = document.createElement("span");
+        stateLabel.textContent = `State ${index}`;
+        const actionLabel = document.createElement("span");
+        actionLabel.textContent = index === 0 ? "Start" : solutionActions[index - 1];
+        title.append(stateLabel, actionLabel);
+
+        const miniBoard = document.createElement("div");
+        miniBoard.className = "mini-board";
+        pathState.forEach((tile) => {
+          const cell = document.createElement("div");
+          cell.className = `mini-cell${tile === 0 ? " blank" : ""}`;
+          cell.textContent = tile === 0 ? "" : tile;
+          miniBoard.appendChild(cell);
+        });
+
+        item.append(title, miniBoard);
+        fullPathEl.appendChild(item);
+      });
     }
 
     function renderBoard() {
@@ -888,8 +988,10 @@ WEB_APP_HTML = r"""<!doctype html>
         document.getElementById("stat-generated").textContent = data.stats.generated;
         document.getElementById("stat-runtime").textContent = data.stats.runtime_ms;
         renderMoveProgress();
+        renderFullPath();
         if (data.totalCost < 0) {
           movesEl.textContent = "No solution";
+          renderFullPath();
           setStatus("No solution");
           return false;
         }
@@ -916,10 +1018,12 @@ WEB_APP_HTML = r"""<!doctype html>
         state = [...solutionStates[solutionIndex]];
         renderBoard();
         renderMoveProgress();
+        renderFullPath();
         setStatus(`Step ${solutionIndex}: ${move}`);
       } else {
         setStatus("Goal reached");
         renderMoveProgress();
+        renderFullPath();
       }
     }
 
@@ -938,6 +1042,7 @@ WEB_APP_HTML = r"""<!doctype html>
         if (solutionIndex >= solutionStates.length - 1) {
           animating = false;
           renderMoveProgress();
+          renderFullPath();
           setStatus("Animation complete");
           return;
         }
@@ -946,6 +1051,7 @@ WEB_APP_HTML = r"""<!doctype html>
         state = [...solutionStates[solutionIndex]];
         renderBoard();
         renderMoveProgress();
+        renderFullPath();
         setStatus(`Animating ${solutionIndex}: ${move}`);
         setTimeout(tick, 420);
       };
@@ -985,6 +1091,7 @@ WEB_APP_HTML = r"""<!doctype html>
     syncStateInput();
     updateAlgorithmUI();
     renderBoard();
+    renderFullPath();
   </script>
 </body>
 </html>
@@ -1211,7 +1318,7 @@ class EightPuzzleApp:
         right = tk.Frame(shell, bg="#ffffff", padx=20, pady=20, highlightbackground="#d8e0eb", highlightthickness=1)
         right.grid(row=1, column=1, sticky="nsew", pady=(18, 0), padx=(12, 0))
         right.columnconfigure(0, weight=1)
-        right.rowconfigure(4, weight=1)
+        right.rowconfigure(6, weight=1)
 
         controls = ttk.Frame(right, style="Panel.TFrame")
         controls.grid(row=0, column=0, sticky="ew")
@@ -1264,13 +1371,29 @@ class EightPuzzleApp:
         self.moves_text.grid(row=3, column=0, sticky="ew")
         self.moves_text.configure(state=tk.DISABLED)
 
-        columns = ("algorithm", "cost", "experience", "settings")
+        ttk.Label(right, text="Full path", style="PanelTitle.TLabel").grid(row=4, column=0, sticky="w", pady=(18, 6))
+        self.full_path_text = tk.Text(
+            right,
+            height=8,
+            wrap=tk.WORD,
+            bd=0,
+            bg="#f8fafc",
+            fg="#172033",
+            padx=12,
+            pady=10,
+            font=("Consolas", 10),
+            insertbackground="#172033",
+        )
+        self.full_path_text.grid(row=5, column=0, sticky="ew")
+        self.full_path_text.configure(state=tk.DISABLED)
+
+        columns = ("algorithm", "cost", "expanded", "settings")
         self.benchmark_table = ttk.Treeview(right, columns=columns, show="headings", height=8)
         for column in columns:
             self.benchmark_table.heading(column, text=column.title())
             width = 130 if column == "settings" else 92
             self.benchmark_table.column(column, anchor=tk.CENTER, width=width)
-        self.benchmark_table.grid(row=4, column=0, sticky="nsew", pady=(18, 0))
+        self.benchmark_table.grid(row=6, column=0, sticky="nsew", pady=(18, 0))
 
     def _on_algorithm_changed(self, _event=None):
         algorithm = self.algorithm_combo.get()
@@ -1407,6 +1530,7 @@ class EightPuzzleApp:
         self.solution_index = 0
         self._show_stats(solver.last_stats)
         self._show_moves(path)
+        self._show_full_path(full_path, path)
 
         if cost < 0:
             self.status_var.set("No solution found")
@@ -1511,6 +1635,26 @@ class EightPuzzleApp:
         self.moves_text.insert(tk.END, " -> ".join(moves) if moves else "Already solved")
         self.moves_text.configure(state=tk.DISABLED)
 
+    def _show_full_path(self, states: Sequence[Sequence[int]], moves: Sequence[str]):
+        self.full_path_text.configure(state=tk.NORMAL)
+        self.full_path_text.delete("1.0", tk.END)
+
+        if not states:
+            text = "Solve to show fullPath"
+        else:
+            blocks = []
+            for index, path_state in enumerate(states):
+                label = "Start" if index == 0 else moves[index - 1]
+                rows = [
+                    " ".join(str(tile) for tile in path_state[row * BOARD_SIZE : (row + 1) * BOARD_SIZE])
+                    for row in range(BOARD_SIZE)
+                ]
+                blocks.append("State " + str(index) + " (" + label + ")\n" + "\n".join(rows))
+            text = "\n\n".join(blocks)
+
+        self.full_path_text.insert(tk.END, text)
+        self.full_path_text.configure(state=tk.DISABLED)
+
     def _clear_solution(self):
         self.solution_states = []
         self.solution_actions = []
@@ -1522,6 +1666,8 @@ class EightPuzzleApp:
                 self.benchmark_table.delete(row)
         if hasattr(self, "moves_text"):
             self._show_moves([])
+        if hasattr(self, "full_path_text"):
+            self._show_full_path([], [])
 
     def _sync_entry(self):
         self.state_entry.delete(0, tk.END)
